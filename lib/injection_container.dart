@@ -1,7 +1,10 @@
 import 'package:get_it/get_it.dart';
 
+import 'core/database/database_helper.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  // TODO Registro de dependencias se agregará aquí en sprints futuros.
+  // ── Database ──
+  await DatabaseHelper().database;
 }
