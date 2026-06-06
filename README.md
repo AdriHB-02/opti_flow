@@ -35,10 +35,19 @@ flutter build ios --release
 | Comando | Descripción |
 |---------|-------------|
 | `flutter run` | Ejecutar en modo desarrollo |
-| `flutter test` | Ejecutar tests unitarios |
+| `flutter test` | Ejecutar todos los tests |
+| `flutter test --plain-name "DB-S1-14"` | Ejecutar test específico de BD |
 | `flutter analyze` | Análisis estático de código |
 | `flutter pub get` | Instalar/actualizar dependencias |
 | `flutter clean` | Limpiar builds anteriores |
+
+## Requisitos previos
+
+- **Flutter SDK** >=3.10.7 ([instalar](https://docs.flutter.dev/get-started/install))
+- Dispositivo o emulador Android (API 26+) / iOS (12+)
+- Para tests de BD en escritorio (Windows/Linux/macOS): `sqflite_common_ffi` se configura automáticamente
+
+## Variables de entorno
 
 ## Variables de entorno
 

@@ -8,6 +8,8 @@ import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/domain/usecases/recuperar_password_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
+import 'core/database/database_helper.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -37,4 +39,6 @@ Future<void> init() async {
       authRepository: sl(),
     ),
   );
+  // ── Database ──
+  await DatabaseHelper().database;
 }

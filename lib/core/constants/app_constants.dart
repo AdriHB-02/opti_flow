@@ -1,3 +1,6 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+
 class AppConstants {
   AppConstants._();
 
@@ -17,14 +20,18 @@ class AppConstants {
   static const int dbVersion = 1;
 
   // ── Supabase (placeholder — set in .env) ──
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://your-project.supabase.co',
-  );
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: 'your-anon-key',
-  );
+  // static const String supabaseUrl = String.fromEnvironment(
+  //   'SUPABASE_URL',
+  //   defaultValue: 'https://your-project.supabase.co',
+  // );
+
+  
+  static final supabaseUrl = dotenv.get('SUPABASE_URL', fallback: 'https://your-project.supabase.co/rest/v1');
+  static final supabaseAnonKey = dotenv.get('SUPABASE_ANON_KEY', fallback: 'your-anon-key');
+  // static const String supabaseAnonKey = String.fromEnvironment(
+  //   'SUPABASE_ANON_KEY',
+  //   defaultValue: 'your-anon-key',
+  // );
 
   // ── AWS S3 (placeholder) ──
   static const String awsBucket = String.fromEnvironment(
