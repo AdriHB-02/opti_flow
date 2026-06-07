@@ -21,8 +21,6 @@ void main(List<String> args) async {
   };
 
   final client = HttpClient();
-  print(AppConstants.supabaseUrl);
-  print(AppConstants.supabaseAnonKey);
   try {
     final request = await client.postUrl(
       Uri.parse('${AppConstants.supabaseUrl}/doctores'),
