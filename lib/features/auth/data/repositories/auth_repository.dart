@@ -12,13 +12,21 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<UserEntity> login(String email, String password) async {
     final data = await _remoteDataSource.login(email, password);
-    return UserFactory.fromMap(data);
+    try {
+      return UserFactory.fromMap(data);
+    } catch (e) {
+      throw Exception('Error al procesar datos de usuario: $e');
+    }
   }
 
   @override
   Future<UserEntity> loginBiometrico() async {
     final data = await _remoteDataSource.loginBiometrico();
-    return UserFactory.fromMap(data);
+    try {
+      return UserFactory.fromMap(data);
+    } catch (e) {
+      throw Exception('Error al procesar datos de usuario: $e');
+    }
   }
 
   @override

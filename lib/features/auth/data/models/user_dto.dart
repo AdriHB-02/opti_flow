@@ -23,7 +23,7 @@ class UserDTO {
     required this.updatedAt,
   });
 
-  factory UserDTO.fromEntity(UserEntity entity) {
+  factory UserDTO.fromEntity(UserEntity entity, {DateTime? createdAt}) {
     String? depId;
     if (entity is DoctorUser) {
       depId = entity.dependenciaLocalId;
@@ -35,7 +35,7 @@ class UserDTO {
       rol: entity.rol.name.toUpperCase(),
       dependenciaLocalId: depId,
       activo: entity.activo,
-      createdAt: DateTime.now(),
+      createdAt: createdAt ?? DateTime.now(),
       updatedAt: DateTime.now(),
     );
   }
