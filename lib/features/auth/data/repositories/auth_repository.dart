@@ -1,7 +1,7 @@
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/i_auth_repository.dart';
-import '../../domain/factories/user_factory.dart';
 import '../datasources/remote_auth_data_source.dart';
+import '../factories/user_factory.dart';
 
 class AuthRepository implements IAuthRepository {
   final RemoteAuthDataSource _remoteDataSource;
@@ -12,13 +12,13 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<UserEntity> login(String email, String password) async {
     final data = await _remoteDataSource.login(email, password);
-    return UserFactory.create(data);
+    return UserFactory.fromMap(data);
   }
 
   @override
   Future<UserEntity> loginBiometrico() async {
     final data = await _remoteDataSource.loginBiometrico();
-    return UserFactory.create(data);
+    return UserFactory.fromMap(data);
   }
 
   @override

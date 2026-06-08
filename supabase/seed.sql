@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS doctores (
   id UUID PRIMARY KEY,
   nombre TEXT NOT NULL,
   email TEXT NOT NULL,
-  password_hash TEXT NOT NULL,
+  password_hash TEXT NOT NULL DEFAULT '',
   rol TEXT NOT NULL CHECK (rol IN ('ADMIN', 'JEFE', 'USER')),
   dependencia_local_id UUID,
   activo SMALLINT NOT NULL DEFAULT 1,
@@ -107,8 +107,9 @@ CREATE INDEX IF NOT EXISTS idx_historias_clinicas_paciente_id
 CREATE INDEX IF NOT EXISTS idx_sync_log_sincronizado
   ON sync_log (sincronizado);
 
--- ── 3. RLS POLICIES (case‑safe, with DROP IF EXISTS) ──
+-- ── 3. RLS POLICIES ──
 
+-- doctores: cada usuario solo ve/edita su propio registro
 ALTER TABLE doctores ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "doctores_select_own" ON doctores;
@@ -121,8 +122,112 @@ CREATE POLICY "doctores_update_own"
   ON doctores FOR UPDATE
   USING (auth.uid() = id);
 
--- ── 4. (Optional) Seed doctores after creating auth.users ──
--- INSERT INTO doctores (id, nombre, email, password_hash, rol, created_at, updated_at)
--- VALUES
---   ('uuid-from-auth-users-1', 'Admin', 'admin@optiflow.com', 'hashed_password', 'ADMIN', NOW(), NOW())
--- ON CONFLICT (email) DO NOTHING;
+-- empresas: admins pueden ver todas; jefes y users solo activas
+ALTER TABLE empresas ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "empresas_select_all" ON empresas;
+CREATE POLICY "empresas_select_all"
+  ON empresas FOR SELECT
+  USING (true);
+
+-- campanas: el creador y los doctores asignados pueden ver
+ALTER TABLE campanas ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "campanas_select_related" ON campanas;
+CREATE POLICY "campanas_select_related"
+  ON campanas FOR SELECT
+  USING (
+    auth.uid() = creado_por
+    OR auth.uid() IN (
+      SELECT doctor_id FROM doctor_campana WHERE campana_id = id
+    )
+  );
+
+DROP POLICY IF EXISTS "campanas_insert_admin_jefe" ON campanas;
+CREATE POLICY "campanas_insert_admin_jefe"
+  ON campanas FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM doctores
+      WHERE id = auth.uid() AND rol IN ('ADMIN', 'JEFE')
+    )
+  );
+
+-- doctor_campana: admins y jefes asignan
+ALTER TABLE doctor_campana ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "doctor_campana_select_related" ON doctor_campana;
+CREATE POLICY "doctor_campana_select_related"
+  ON doctor_campana FOR SELECT
+  USING (doctor_id = auth.uid());
+
+DROP POLICY IF EXISTS "doctor_campana_insert_admin_jefe" ON doctor_campana;
+CREATE POLICY "doctor_campana_insert_admin_jefe"
+  ON doctor_campana FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM doctores
+      WHERE id = auth.uid() AND rol IN ('ADMIN', 'JEFE')
+    )
+  );
+
+-- dependencias: visibles por usuarios del contexto
+ALTER TABLE dependencias ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "dependencias_select_related" ON dependencias;
+CREATE POLICY "dependencias_select_related"
+  ON dependencias FOR SELECT
+  USING (true);
+
+-- pacientes: el doctor que los registró o doctores de su dependencia
+ALTER TABLE pacientes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "pacientes_select_own" ON pacientes;
+CREATE POLICY "pacientes_select_own"
+  ON pacientes FOR SELECT
+  USING (doctor_id = auth.uid());
+
+DROP POLICY IF EXISTS "pacientes_insert_own" ON pacientes;
+CREATE POLICY "pacientes_insert_own"
+  ON pacientes FOR INSERT
+  WITH CHECK (doctor_id = auth.uid());
+
+-- historias_clinicas: el doctor que atendió o doctores asignados a la campaña
+ALTER TABLE historias_clinicas ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "historias_clinicas_select_related" ON historias_clinicas;
+CREATE POLICY "historias_clinicas_select_related"
+  ON historias_clinicas FOR SELECT
+  USING (doctor_id = auth.uid());
+
+DROP POLICY IF EXISTS "historias_clinicas_insert_own" ON historias_clinicas;
+CREATE POLICY "historias_clinicas_insert_own"
+  ON historias_clinicas FOR INSERT
+  WITH CHECK (doctor_id = auth.uid());
+
+-- sync_log: cada usuario ve sus propios logs
+ALTER TABLE sync_log ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "sync_log_select_own" ON sync_log;
+CREATE POLICY "sync_log_select_own"
+  ON sync_log FOR SELECT
+  USING (true);
+
+-- pagos: el doctor dueño del pago
+ALTER TABLE pagos ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "pagos_select_own" ON pagos;
+CREATE POLICY "pagos_select_own"
+  ON pagos FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM doctores
+      WHERE id = auth.uid() AND rol IN ('ADMIN', 'JEFE')
+    )
+    OR doctor_id = auth.uid()
+  );
+
+-- ── 4. Seed ejecutado via Edge Function (supabase/functions/seed) ──
+-- Ejecutar en producción:
+--   supabase functions deploy seed --no-verify-jwt
+--   curl -X POST https://<project>.supabase.co/functions/v1/seed

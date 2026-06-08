@@ -39,12 +39,5 @@ class AdminUser extends UserEntity {
     throw UnimplementedError();
   }
 
-  factory AdminUser.fromMap(Map<String, dynamic> data) {
-    return AdminUser(
-      id: data['id'] as String,
-      nombre: data['nombre'] as String,
-      email: data['email'] as String,
-      activo: (data['activo'] as int) == 1,
-    );
-  }
+  // Map conversion handled by UserFactory in data layer
 }

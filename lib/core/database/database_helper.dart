@@ -38,7 +38,6 @@ class DatabaseHelper {
         id TEXT PRIMARY KEY NOT NULL,
         nombre TEXT NOT NULL,
         email TEXT NOT NULL,
-        password_hash TEXT NOT NULL,
         rol TEXT NOT NULL CHECK(rol IN ('ADMIN', 'JEFE', 'USER')),
         dependencia_local_id TEXT,
         activo INTEGER NOT NULL DEFAULT 1,
@@ -53,7 +52,8 @@ class DatabaseHelper {
         nombre TEXT NOT NULL,
         lugar TEXT NOT NULL,
         activa INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
       )
     ''');
 
@@ -131,12 +131,14 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE ${AppConstants.tableSyncLog} (
         id TEXT PRIMARY KEY NOT NULL,
+        doctor_id TEXT NOT NULL,
         tabla_afectada TEXT NOT NULL,
         registro_id TEXT NOT NULL,
         operacion TEXT NOT NULL CHECK(operacion IN ('INSERT', 'UPDATE', 'DELETE')),
         fecha_local TEXT NOT NULL,
         sincronizado INTEGER NOT NULL DEFAULT 0,
-        fecha_sync TEXT
+        fecha_sync TEXT,
+        FOREIGN KEY (doctor_id) REFERENCES ${AppConstants.tableDoctores}(id)
       )
     ''');
 
@@ -166,9 +168,67 @@ class DatabaseHelper {
       CREATE INDEX idx_sync_log_sincronizado
       ON ${AppConstants.tableSyncLog} (sincronizado)
     ''');
+    await db.execute('''
+      CREATE INDEX idx_campanas_creado_por
+      ON ${AppConstants.tableCampanas} (creado_por)
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_campanas_empresa_id
+      ON ${AppConstants.tableCampanas} (empresa_id)
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_historias_clinicas_campana_id
+      ON ${AppConstants.tableHistoriasClinicas} (campana_id)
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_pagos_doctor_id
+      ON ${AppConstants.tablePagos} (doctor_id)
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_sync_log_tabla_afectada
+      ON ${AppConstants.tableSyncLog} (tabla_afectada)
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_sync_log_doctor_id
+      ON ${AppConstants.tableSyncLog} (doctor_id)
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Migraciones futuras se agregarán aquí.
+    if (oldVersion < 2) {
+      await db.execute('''
+        ALTER TABLE ${AppConstants.tableDoctores} DROP COLUMN password_hash
+      ''');
+      await db.execute('''
+        ALTER TABLE ${AppConstants.tableEmpresas} ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''
+      ''');
+      await db.execute('''
+        ALTER TABLE ${AppConstants.tableSyncLog} ADD COLUMN doctor_id TEXT NOT NULL DEFAULT ''
+      ''');
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_campanas_creado_por
+        ON ${AppConstants.tableCampanas} (creado_por)
+      ''');
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_campanas_empresa_id
+        ON ${AppConstants.tableCampanas} (empresa_id)
+      ''');
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_historias_clinicas_campana_id
+        ON ${AppConstants.tableHistoriasClinicas} (campana_id)
+      ''');
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_pagos_doctor_id
+        ON ${AppConstants.tablePagos} (doctor_id)
+      ''');
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_sync_log_tabla_afectada
+        ON ${AppConstants.tableSyncLog} (tabla_afectada)
+      ''');
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_sync_log_doctor_id
+        ON ${AppConstants.tableSyncLog} (doctor_id)
+      ''');
+    }
   }
 }

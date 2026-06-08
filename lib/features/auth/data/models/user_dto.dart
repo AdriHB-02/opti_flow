@@ -1,12 +1,11 @@
 import '../../domain/entities/user_entity.dart';
 import '../../domain/entities/doctor_user.dart';
-import '../../domain/factories/user_factory.dart';
+import '../factories/user_factory.dart';
 
 class UserDTO {
   final String id;
   final String nombre;
   final String email;
-  final String passwordHash;
   final String rol;
   final String? dependenciaLocalId;
   final bool activo;
@@ -17,7 +16,6 @@ class UserDTO {
     required this.id,
     required this.nombre,
     required this.email,
-    required this.passwordHash,
     required this.rol,
     this.dependenciaLocalId,
     required this.activo,
@@ -34,7 +32,6 @@ class UserDTO {
       id: entity.id,
       nombre: entity.nombre,
       email: entity.email,
-      passwordHash: '',
       rol: entity.rol.name.toUpperCase(),
       dependenciaLocalId: depId,
       activo: entity.activo,
@@ -44,7 +41,7 @@ class UserDTO {
   }
 
   UserEntity toEntity() {
-    return UserFactory.create(toMap());
+    return UserFactory.fromMap(toMap());
   }
 
   Map<String, dynamic> toMap() {
@@ -52,7 +49,6 @@ class UserDTO {
       'id': id,
       'nombre': nombre,
       'email': email,
-      'password_hash': passwordHash,
       'rol': rol,
       'dependencia_local_id': dependenciaLocalId,
       'activo': activo ? 1 : 0,
@@ -66,7 +62,6 @@ class UserDTO {
       id: map['id'] as String,
       nombre: map['nombre'] as String,
       email: map['email'] as String,
-      passwordHash: map['password_hash'] as String? ?? '',
       rol: map['rol'] as String,
       dependenciaLocalId: map['dependencia_local_id'] as String?,
       activo: (map['activo'] as int) == 1,

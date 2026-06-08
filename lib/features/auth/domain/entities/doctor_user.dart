@@ -39,13 +39,5 @@ class DoctorUser extends UserEntity {
     throw UnimplementedError();
   }
 
-  factory DoctorUser.fromMap(Map<String, dynamic> data) {
-    return DoctorUser(
-      id: data['id'] as String,
-      nombre: data['nombre'] as String,
-      email: data['email'] as String,
-      activo: (data['activo'] as int) == 1,
-      dependenciaLocalId: data['dependencia_local_id'] as String? ?? '',
-    );
-  }
+  // Map conversion handled by UserFactory in data layer
 }

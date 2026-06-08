@@ -17,23 +17,10 @@ class AppConstants {
 
   // ── SQLite database ──
   static const String dbName = 'optiflow_local.db';
-  static const int dbVersion = 1;
+  static const int dbVersion = 2;
 
-  // ── Supabase (placeholder — set in .env) ──
-  // static const String supabaseUrl = String.fromEnvironment(
-  //   'SUPABASE_URL',
-  //   defaultValue: 'https://your-project.supabase.co',
-  // );
-
-  
   static final supabaseUrl = dotenv.get('SUPABASE_URL', fallback: 'https://your-project.supabase.co/rest/v1');
   static final supabaseAnonKey = dotenv.get('SUPABASE_ANON_KEY', fallback: 'your-anon-key');
-  static final serviceRoleKey = dotenv.get('SUPABASE_SERVICE_ROLE_KEY', fallback: '');
-  static final encryptionKey = dotenv.get('ENCRYPTION_KEY', fallback: '');
-  // static const String supabaseAnonKey = String.fromEnvironment(
-  //   'SUPABASE_ANON_KEY',
-  //   defaultValue: 'your-anon-key',
-  // );
 
   // ── AWS S3 (placeholder) ──
   static const String awsBucket = String.fromEnvironment(

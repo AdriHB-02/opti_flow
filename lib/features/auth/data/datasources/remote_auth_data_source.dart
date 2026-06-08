@@ -13,11 +13,14 @@ class RemoteAuthDataSource {
       email: email,
       password: password,
     );
-    final userId = authResponse.user!.id;
+    final user = authResponse.user;
+    if (user == null) {
+      throw Exception('Error de autenticación: usuario no encontrado');
+    }
     final data = await _client
         .from(AppConstants.tableDoctores)
         .select()
-        .eq('id', userId)
+        .eq('id', user.id)
         .single();
     return data;
   }
@@ -27,11 +30,10 @@ class RemoteAuthDataSource {
     if (session == null) {
       throw Exception('No hay sesión activa');
     }
-    final userId = session.user.id;
     final data = await _client
         .from(AppConstants.tableDoctores)
         .select()
-        .eq('id', userId)
+        .eq('id', session.user.id)
         .single();
     return data;
   }

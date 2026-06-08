@@ -36,7 +36,9 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final available = await _localAuth.canCheckBiometrics;
       if (mounted) setState(() => _biometricAvailable = available);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Biometric] canCheckBiometrics falló: $e');
+    }
   }
 
   Future<void> _checkSession() async {

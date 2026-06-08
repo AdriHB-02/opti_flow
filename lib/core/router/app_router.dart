@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import 'widgets/dashboard_scaffold.dart';
 
 class AppRouter {
   static const String login = '/login';
@@ -27,22 +27,22 @@ class AppRouter {
       GoRoute(
         path: adminDashboard,
         name: 'adminDashboard',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('OptiFlow - Admin Dashboard')),
+        builder: (context, state) => const DashboardScaffold(
+          title: 'OptiFlow - Admin Dashboard',
         ),
       ),
       GoRoute(
         path: jefeDashboard,
         name: 'jefeDashboard',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('OptiFlow - Jefe Dashboard')),
+        builder: (context, state) => const DashboardScaffold(
+          title: 'OptiFlow - Jefe Dashboard',
         ),
       ),
       GoRoute(
         path: userDashboard,
         name: 'userDashboard',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('OptiFlow - User Dashboard')),
+        builder: (context, state) => const DashboardScaffold(
+          title: 'OptiFlow - User Dashboard',
         ),
       ),
     ],

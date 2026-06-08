@@ -22,7 +22,6 @@ void main() {
       'id': 'doc-test-1',
       'nombre': 'Dr. Test',
       'email': 'test@voi.com',
-      'password_hash': 'hash123',
       'rol': 'USER',
       'activo': 1,
       'created_at': now,

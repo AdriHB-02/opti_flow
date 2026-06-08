@@ -2,21 +2,26 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/user_entity.dart';
-import '../../domain/repositories/i_auth_repository.dart';
+import '../../domain/usecases/biometric_login_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/logout_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase _loginUseCase;
-  final IAuthRepository _authRepository;
+  final LogoutUseCase _logoutUseCase;
+  final BiometricLoginUseCase _biometricLoginUseCase;
 
   AuthBloc({
     required LoginUseCase loginUseCase,
-    required IAuthRepository authRepository,
+    required LogoutUseCase logoutUseCase,
+    required BiometricLoginUseCase biometricLoginUseCase,
   })  : _loginUseCase = loginUseCase,
-        _authRepository = authRepository,
+        _logoutUseCase = logoutUseCase,
+        _biometricLoginUseCase = biometricLoginUseCase,
         super(const AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
     on<LogoutRequested>(_onLogoutRequested);
@@ -39,12 +44,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
-    try {
-      await _authRepository.logout();
-      emit(const AuthInitial());
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
+    final result = await _logoutUseCase(const NoParams());
+    emit(result.fold(
+      (failure) => AuthError(failure.message),
+      (_) => const AuthInitial(),
+    ));
   }
 
   Future<void> _onBiometricLoginRequested(
@@ -52,12 +56,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
-    try {
-      final user = await _authRepository.loginBiometrico();
-      emit(Authenticated(user));
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
+    final result = await _biometricLoginUseCase(const NoParams());
+    emit(_resultToState(result));
   }
 
   AuthState _resultToState(Either<Failure, UserEntity> result) {
