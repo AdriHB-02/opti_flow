@@ -10,6 +10,7 @@ void main() {
   databaseFactory = databaseFactoryFfi;
 
   setUp(() async {
+    await DatabaseHelper().close();
     final dbPath = await getDatabasesPath();
     await deleteDatabase('$dbPath/${AppConstants.dbName}');
   });
@@ -39,5 +40,52 @@ void main() {
     expect(results[0]['email'], 'test@voi.com');
     expect(results[0]['rol'], 'USER');
     expect(results[0]['activo'], 1);
+  });
+
+  test('DB-S1-16: batch insert multiple rows', () async {
+    final now = DateTime.now().toIso8601String();
+    final rows = List.generate(3, (i) => {
+      'id': 'emp-test-$i',
+      'nombre': 'Empresa $i',
+      'lugar': 'Lugar $i',
+      'activa': 1,
+      'created_at': now,
+      'updated_at': now,
+    });
+
+    await DatabaseHelper().batchInsert(AppConstants.tableEmpresas, rows);
+
+    final db = await DatabaseHelper().database;
+    final result = await db.rawQuery('SELECT COUNT(*) AS cnt FROM ${AppConstants.tableEmpresas}');
+    expect(result.first['cnt'], 3);
+  });
+
+  test('DB-S1-16: batch insert empty list does nothing', () async {
+    await DatabaseHelper().batchInsert(AppConstants.tableEmpresas, []);
+    final db = await DatabaseHelper().database;
+    final result = await db.rawQuery('SELECT COUNT(*) AS cnt FROM ${AppConstants.tableEmpresas}');
+    expect(result.first['cnt'], 0);
+  });
+
+  test('DB-S1-16: concurrent database access returns same instance', () async {
+    final results = await Future.wait([
+      DatabaseHelper().database,
+      DatabaseHelper().database,
+      DatabaseHelper().database,
+    ]);
+    // All should return the same database object
+    expect(results[0], same(results[1]));
+    expect(results[0], same(results[2]));
+  });
+
+  test('DB-S1-16: close and reopen works', () async {
+    final db1 = await DatabaseHelper().database;
+    expect(db1.isOpen, true);
+
+    await DatabaseHelper().close();
+    expect(db1.isOpen, false);
+
+    final db2 = await DatabaseHelper().database;
+    expect(db2.isOpen, true);
   });
 }

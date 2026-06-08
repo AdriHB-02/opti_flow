@@ -17,7 +17,7 @@ class AppConstants {
 
   // ── SQLite database ──
   static const String dbName = 'optiflow_local.db';
-  static const int dbVersion = 2;
+  static const int dbVersion = 3;
 
   static final supabaseUrl = dotenv.get('SUPABASE_URL', fallback: 'https://your-project.supabase.co/rest/v1');
   static final supabaseAnonKey = dotenv.get('SUPABASE_ANON_KEY', fallback: 'your-anon-key');
