@@ -10,6 +10,10 @@ import 'features/auth/domain/usecases/logout_usecase.dart';
 import 'features/auth/domain/usecases/recuperar_password_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
+import 'features/patients/data/datasources/local_patient_data_source.dart';
+import 'features/patients/data/datasources/local_historia_data_source.dart';
+import 'features/campanas/data/datasources/local_campana_data_source.dart';
+
 import 'core/database/database_helper.dart';
 
 final sl = GetIt.instance;
@@ -21,6 +25,15 @@ Future<void> init() async {
   // ── Data Sources ──
   sl.registerLazySingleton<RemoteAuthDataSource>(
     () => RemoteAuthDataSource(supabaseClient: sl()),
+  );
+  sl.registerLazySingleton<LocalPatientDataSource>(
+    () => LocalPatientDataSource(databaseHelper: sl()),
+  );
+  sl.registerLazySingleton<LocalHistoriaDataSource>(
+    () => LocalHistoriaDataSource(databaseHelper: sl()),
+  );
+  sl.registerLazySingleton<LocalCampanaDataSource>(
+    () => LocalCampanaDataSource(databaseHelper: sl()),
   );
 
   // ── Repositories ──

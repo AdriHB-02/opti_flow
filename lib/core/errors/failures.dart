@@ -11,3 +11,7 @@ abstract class Failure extends Equatable {
 class AuthFailure extends Failure {
   const AuthFailure(super.message);
 }
+
+class CacheFailure extends Failure {
+  const CacheFailure(super.message);
+}
