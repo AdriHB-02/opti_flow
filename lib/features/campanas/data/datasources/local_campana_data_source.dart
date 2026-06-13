@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/database/database_helper.dart';
@@ -58,6 +59,24 @@ class LocalCampanaDataSource {
       return count > 0;
     } on DatabaseException catch (e) {
       throw Exception('Error al verificar duplicado: $e');
+    }
+  }
+
+  Future<void> assignDoctor(String campanaId, String doctorId) async {
+    try {
+      final db = await _databaseHelper.database;
+      await db.insert(
+        AppConstants.tableDoctorCampana,
+        {
+          'id': const Uuid().v4(),
+          'doctor_id': doctorId,
+          'campana_id': campanaId,
+          'asignado_en': DateTime.now().toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } on DatabaseException catch (e) {
+      throw Exception('Error al asignar doctor a campaña: $e');
     }
   }
 }

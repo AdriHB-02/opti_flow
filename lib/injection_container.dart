@@ -12,7 +12,13 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 import 'features/patients/data/datasources/local_patient_data_source.dart';
 import 'features/patients/data/datasources/local_historia_data_source.dart';
+import 'features/patients/data/repositories/historia_repository.dart';
+import 'features/patients/data/repositories/patient_repository.dart';
+import 'features/patients/domain/repositories/i_historia_repository.dart';
+import 'features/patients/domain/repositories/i_patient_repository.dart';
 import 'features/campanas/data/datasources/local_campana_data_source.dart';
+import 'features/campanas/data/repositories/campana_repository.dart';
+import 'features/campanas/domain/repositories/i_campana_repository.dart';
 
 import 'core/database/database_helper.dart';
 
@@ -39,6 +45,15 @@ Future<void> init() async {
   // ── Repositories ──
   sl.registerLazySingleton<IAuthRepository>(
     () => AuthRepository(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<IPatientRepository>(
+    () => PatientRepository(localDataSource: sl()),
+  );
+  sl.registerLazySingleton<IHistoriaRepository>(
+    () => HistoriaRepository(localDataSource: sl()),
+  );
+  sl.registerLazySingleton<ICampanaRepository>(
+    () => CampanaRepository(localDataSource: sl()),
   );
 
   // ── Use Cases ──

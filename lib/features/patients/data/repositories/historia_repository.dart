@@ -1,0 +1,55 @@
+import 'package:dartz/dartz.dart';
+
+import '../../../../core/errors/failures.dart';
+import '../../domain/entities/historia_clinica_entity.dart';
+import '../../domain/repositories/i_historia_repository.dart';
+import '../datasources/local_historia_data_source.dart';
+import '../models/historia_clinica_dto.dart';
+
+class HistoriaRepository implements IHistoriaRepository {
+  final LocalHistoriaDataSource _localDataSource;
+
+  HistoriaRepository({required LocalHistoriaDataSource localDataSource})
+      : _localDataSource = localDataSource;
+
+  @override
+  Future<Either<Failure, HistoriaClinicaEntity>> saveHistoria(
+    HistoriaClinicaEntity historia,
+  ) async {
+    try {
+      final dto = HistoriaClinicaDTO.fromEntity(historia);
+      await _localDataSource.insertHistoria(dto);
+      return Right(historia);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<HistoriaClinicaEntity>>>
+      getHistoriasByPaciente(String pacienteId) async {
+    try {
+      final dtos = await _localDataSource.getByPaciente(pacienteId);
+      final entities = dtos.map((dto) => dto.toEntity()).toList();
+      return Right(entities);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, HistoriaClinicaEntity?>> getHistoriaAnterior(
+    String pacienteId,
+    String campanaAnteriorId,
+  ) async {
+    try {
+      final dto = await _localDataSource.getAnterior(
+        pacienteId,
+        campanaAnteriorId,
+      );
+      return Right(dto?.toEntity());
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+}

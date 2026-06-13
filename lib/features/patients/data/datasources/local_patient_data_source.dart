@@ -52,4 +52,20 @@ class LocalPatientDataSource {
       throw Exception('Error al buscar pacientes: $e');
     }
   }
+
+  Future<PatientDTO?> getPatientById(String id) async {
+    try {
+      final db = await _databaseHelper.database;
+      final maps = await db.query(
+        AppConstants.tablePacientes,
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+      if (maps.isEmpty) return null;
+      return PatientDTO.fromMap(maps.first);
+    } on DatabaseException catch (e) {
+      throw Exception('Error al obtener paciente por id: $e');
+    }
+  }
 }
