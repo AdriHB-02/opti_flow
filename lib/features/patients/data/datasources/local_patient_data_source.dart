@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/errors/data_source_exception.dart';
 import '../models/patient_dto.dart';
 
 class LocalPatientDataSource {
@@ -19,7 +20,7 @@ class LocalPatientDataSource {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } on DatabaseException catch (e) {
-      throw Exception('Error al insertar paciente: $e');
+      throw DataSourceException('Error al insertar paciente', originalError: e);
     }
   }
 
@@ -34,7 +35,7 @@ class LocalPatientDataSource {
       );
       return maps.map((map) => PatientDTO.fromMap(map)).toList();
     } on DatabaseException catch (e) {
-      throw Exception('Error al obtener pacientes: $e');
+      throw DataSourceException('Error al obtener pacientes', originalError: e);
     }
   }
 
@@ -46,10 +47,11 @@ class LocalPatientDataSource {
         where: 'dependencia_id = ? AND nombre_completo LIKE ?',
         whereArgs: [dependenciaId, '%$name%'],
         orderBy: 'created_at DESC',
+        limit: 50,
       );
       return maps.map((map) => PatientDTO.fromMap(map)).toList();
     } on DatabaseException catch (e) {
-      throw Exception('Error al buscar pacientes: $e');
+      throw DataSourceException('Error al buscar pacientes', originalError: e);
     }
   }
 
@@ -65,7 +67,7 @@ class LocalPatientDataSource {
       if (maps.isEmpty) return null;
       return PatientDTO.fromMap(maps.first);
     } on DatabaseException catch (e) {
-      throw Exception('Error al obtener paciente por id: $e');
+      throw DataSourceException('Error al obtener paciente por id', originalError: e);
     }
   }
 }

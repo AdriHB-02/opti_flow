@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 
+import '../../../../core/errors/data_source_exception.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/campana_entity.dart';
 import '../../domain/repositories/i_campana_repository.dart';
@@ -20,8 +21,8 @@ class CampanaRepository implements ICampanaRepository {
       final dto = CampanaDTO.fromEntity(campana);
       await _localDataSource.insertCampana(dto);
       return Right(campana);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } on DataSourceException {
+      return Left(CacheFailure('Error al crear campaña'));
     }
   }
 
@@ -33,8 +34,8 @@ class CampanaRepository implements ICampanaRepository {
       final dtos = await _localDataSource.getCampanasByDoctor(doctorId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } on DataSourceException {
+      return Left(CacheFailure('Error al obtener campañas'));
     }
   }
 
@@ -49,8 +50,8 @@ class CampanaRepository implements ICampanaRepository {
         lugar,
       );
       return Right(exists);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } on DataSourceException {
+      return Left(CacheFailure('Error al verificar historial previo'));
     }
   }
 
@@ -62,8 +63,8 @@ class CampanaRepository implements ICampanaRepository {
     try {
       await _localDataSource.assignDoctor(campanaId, doctorId);
       return const Right(null);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } on DataSourceException {
+      return Left(CacheFailure('Error al asignar doctor a campaña'));
     }
   }
 }

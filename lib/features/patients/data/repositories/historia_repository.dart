@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 
+import '../../../../core/errors/data_source_exception.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/historia_clinica_entity.dart';
 import '../../domain/repositories/i_historia_repository.dart';
@@ -20,8 +21,8 @@ class HistoriaRepository implements IHistoriaRepository {
       final dto = HistoriaClinicaDTO.fromEntity(historia);
       await _localDataSource.insertHistoria(dto);
       return Right(historia);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } on DataSourceException {
+      return Left(CacheFailure('Error al guardar historia clínica'));
     }
   }
 
@@ -32,8 +33,8 @@ class HistoriaRepository implements IHistoriaRepository {
       final dtos = await _localDataSource.getByPaciente(pacienteId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } on DataSourceException {
+      return Left(CacheFailure('Error al obtener historias clínicas'));
     }
   }
 
@@ -48,8 +49,8 @@ class HistoriaRepository implements IHistoriaRepository {
         campanaAnteriorId,
       );
       return Right(dto?.toEntity());
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } on DataSourceException {
+      return Left(CacheFailure('Error al obtener historia anterior'));
     }
   }
 }

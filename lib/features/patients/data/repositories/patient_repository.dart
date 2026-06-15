@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 
+import '../../../../core/errors/data_source_exception.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/patient_entity.dart';
 import '../../domain/repositories/i_patient_repository.dart';
@@ -20,8 +21,8 @@ class PatientRepository implements IPatientRepository {
       final dtos = await _localDataSource.getPatients(dependenciaId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } on DataSourceException {
+      return Left(CacheFailure('Error al obtener pacientes'));
     }
   }
 
@@ -33,8 +34,8 @@ class PatientRepository implements IPatientRepository {
       final dto = PatientDTO.fromEntity(patient);
       await _localDataSource.insertPatient(dto);
       return Right(patient);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } on DataSourceException {
+      return Left(CacheFailure('Error al guardar paciente'));
     }
   }
 
@@ -47,8 +48,8 @@ class PatientRepository implements IPatientRepository {
       final dtos = await _localDataSource.searchByName(name, dependenciaId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } on DataSourceException {
+      return Left(CacheFailure('Error al buscar pacientes'));
     }
   }
 
@@ -59,11 +60,11 @@ class PatientRepository implements IPatientRepository {
     try {
       final dto = await _localDataSource.getPatientById(patientId);
       if (dto == null) {
-        return Left(CacheFailure('Paciente no encontrado: $patientId'));
+        return Left(CacheFailure('Paciente no encontrado'));
       }
       return Right(dto.toEntity());
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } on DataSourceException {
+      return Left(CacheFailure('Error al obtener paciente'));
     }
   }
 }

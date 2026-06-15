@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/errors/data_source_exception.dart';
 import '../models/campana_dto.dart';
 
 class LocalCampanaDataSource {
@@ -20,7 +21,7 @@ class LocalCampanaDataSource {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } on DatabaseException catch (e) {
-      throw Exception('Error al insertar campaña: $e');
+      throw DataSourceException('Error al insertar campaña', originalError: e);
     }
   }
 
@@ -40,7 +41,7 @@ class LocalCampanaDataSource {
       );
       return maps.map((map) => CampanaDTO.fromMap(map)).toList();
     } on DatabaseException catch (e) {
-      throw Exception('Error al obtener campañas: $e');
+      throw DataSourceException('Error al obtener campañas', originalError: e);
     }
   }
 
@@ -58,13 +59,22 @@ class LocalCampanaDataSource {
       final count = result.first['count'] as int;
       return count > 0;
     } on DatabaseException catch (e) {
-      throw Exception('Error al verificar duplicado: $e');
+      throw DataSourceException('Error al verificar duplicado', originalError: e);
     }
   }
 
   Future<void> assignDoctor(String campanaId, String doctorId) async {
     try {
       final db = await _databaseHelper.database;
+      final existing = await db.query(
+        AppConstants.tableDoctorCampana,
+        where: 'campana_id = ? AND doctor_id = ?',
+        whereArgs: [campanaId, doctorId],
+        limit: 1,
+      );
+      if (existing.isNotEmpty) {
+        throw DataSourceException('El doctor ya está asignado a esta campaña');
+      }
       await db.insert(
         AppConstants.tableDoctorCampana,
         {
@@ -73,10 +83,9 @@ class LocalCampanaDataSource {
           'campana_id': campanaId,
           'asignado_en': DateTime.now().toIso8601String(),
         },
-        conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } on DatabaseException catch (e) {
-      throw Exception('Error al asignar doctor a campaña: $e');
+      throw DataSourceException('Error al asignar doctor a campaña', originalError: e);
     }
   }
 }

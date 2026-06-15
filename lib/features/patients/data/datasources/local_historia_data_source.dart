@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/errors/data_source_exception.dart';
 import '../models/historia_clinica_dto.dart';
 
 class LocalHistoriaDataSource {
@@ -19,7 +20,7 @@ class LocalHistoriaDataSource {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } on DatabaseException catch (e) {
-      throw Exception('Error al insertar historia clínica: $e');
+      throw DataSourceException('Error al insertar historia clínica', originalError: e);
     }
   }
 
@@ -34,7 +35,7 @@ class LocalHistoriaDataSource {
       );
       return maps.map((map) => HistoriaClinicaDTO.fromMap(map)).toList();
     } on DatabaseException catch (e) {
-      throw Exception('Error al obtener historias clínicas: $e');
+      throw DataSourceException('Error al obtener historias clínicas', originalError: e);
     }
   }
 
@@ -51,7 +52,7 @@ class LocalHistoriaDataSource {
       if (maps.isEmpty) return null;
       return HistoriaClinicaDTO.fromMap(maps.first);
     } on DatabaseException catch (e) {
-      throw Exception('Error al obtener historia anterior: $e');
+      throw DataSourceException('Error al obtener historia anterior', originalError: e);
     }
   }
 }
