@@ -24,6 +24,8 @@ import 'features/patients/domain/usecases/get_historias_by_paciente_usecase.dart
 import 'features/patients/domain/usecases/get_patients_usecase.dart';
 import 'features/patients/domain/usecases/register_patient_usecase.dart';
 import 'features/patients/domain/usecases/search_patient_usecase.dart';
+import 'features/patients/presentation/bloc/patient_bloc.dart';
+import 'features/patients/presentation/bloc/historia_bloc.dart';
 import 'features/campanas/data/datasources/local_campana_data_source.dart';
 import 'features/campanas/data/repositories/campana_repository.dart';
 import 'features/campanas/domain/repositories/i_campana_repository.dart';
@@ -105,6 +107,18 @@ Future<void> init() async {
       logoutUseCase: sl(),
       biometricLoginUseCase: sl(),
     ),
+  );
+
+  sl.registerFactory<PatientBloc>(
+    () => PatientBloc(
+      getPatientsUseCase: sl(),
+      registerPatientUseCase: sl(),
+      searchPatientUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory<HistoriaBloc>(
+    () => HistoriaBloc(getHistoriasByPacienteUseCase: sl()),
   );
 
   // ── Database ──
