@@ -19,6 +19,15 @@ class CreateCampana extends CampanaEvent {
   List<Object?> get props => [params];
 }
 
+class LoadCampanas extends CampanaEvent {
+  final String doctorId;
+
+  const LoadCampanas({required this.doctorId});
+
+  @override
+  List<Object?> get props => [doctorId];
+}
+
 class AssignDoctor extends CampanaEvent {
   final String campanaId;
   final String doctorId;

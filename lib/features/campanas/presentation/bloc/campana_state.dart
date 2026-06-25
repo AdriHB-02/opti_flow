@@ -14,6 +14,15 @@ class CampanaInitial extends CampanaState {
   const CampanaInitial();
 }
 
+class CampanasLoaded extends CampanaState {
+  final List<CampanaEntity> campanas;
+
+  const CampanasLoaded({required this.campanas});
+
+  @override
+  List<Object?> get props => [campanas];
+}
+
 class CampanaLoading extends CampanaState {
   const CampanaLoading();
 }

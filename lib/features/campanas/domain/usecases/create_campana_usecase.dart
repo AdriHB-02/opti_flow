@@ -14,6 +14,7 @@ class CreateCampanaParams extends Equatable {
   final DateTime fechaInicio;
   final DateTime fechaFin;
   final String creadoPor;
+  final bool ignorarHistorial;
 
   const CreateCampanaParams({
     required this.id,
@@ -23,6 +24,7 @@ class CreateCampanaParams extends Equatable {
     required this.fechaInicio,
     required this.fechaFin,
     required this.creadoPor,
+    this.ignorarHistorial = false,
   });
 
   CampanaEntity toEntity() {
@@ -48,6 +50,7 @@ class CreateCampanaParams extends Equatable {
         fechaInicio,
         fechaFin,
         creadoPor,
+        ignorarHistorial,
       ];
 }
 
@@ -76,18 +79,20 @@ class CreateCampanaUseCase
   Future<Either<Failure, CreateCampanaResult>> call(
     CreateCampanaParams params,
   ) async {
-    final checkResult = await repository.checkHistorialPrevio(
-      params.nombreEmpresa,
-      params.lugar,
-    );
+    if (!params.ignorarHistorial) {
+      final checkResult = await repository.checkHistorialPrevio(
+        params.nombreEmpresa,
+        params.lugar,
+      );
 
-    final existeHistorial = checkResult.fold(
-      (failure) => false,
-      (exists) => exists,
-    );
+      final existeHistorial = checkResult.fold(
+        (failure) => false,
+        (exists) => exists,
+      );
 
-    if (existeHistorial) {
-      return const Right(CreateCampanaResult(existeHistorialPrevio: true));
+      if (existeHistorial) {
+        return const Right(CreateCampanaResult(existeHistorialPrevio: true));
+      }
     }
 
     final campanaEntity = params.toEntity();

@@ -33,6 +33,7 @@ import 'features/campanas/domain/usecases/assign_doctor_to_campana_usecase.dart'
 import 'features/campanas/domain/usecases/create_campana_usecase.dart';
 import 'features/campanas/domain/usecases/get_available_doctors_usecase.dart';
 import 'features/campanas/domain/usecases/get_campana_progress_usecase.dart';
+import 'features/campanas/domain/usecases/get_campanas_by_doctor_usecase.dart';
 import 'features/campanas/domain/usecases/import_pacientes_reconsulta_usecase.dart';
 import 'features/campanas/presentation/bloc/campana_bloc.dart';
 
@@ -129,6 +130,9 @@ Future<void> init() async {
   sl.registerLazySingleton<GetAvailableDoctorsUseCase>(
     () => GetAvailableDoctorsUseCase(sl()),
   );
+  sl.registerLazySingleton<GetCampanasByDoctorUseCase>(
+    () => GetCampanasByDoctorUseCase(sl()),
+  );
 
   // ── BLoCs ──
   sl.registerFactory<AuthBloc>(
@@ -157,6 +161,7 @@ Future<void> init() async {
       assignDoctorToCampanaUseCase: sl(),
       getCampanaProgressUseCase: sl(),
       importPacientesReconsultaUseCase: sl(),
+      getCampanasByDoctorUseCase: sl(),
     ),
   );
 }

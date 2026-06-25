@@ -140,11 +140,22 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   }
 
   Widget _buildEmpresaTile(DependenciaEntity empresa) {
+    final enCampana = empresa.campanaId != null;
     return Card(
       elevation: 1,
       child: ListTile(
         leading: const CircleAvatar(child: Icon(Icons.business)),
         title: Text(empresa.nombre),
+        subtitle: enCampana
+            ? const Row(
+                children: [
+                  Icon(Icons.check_circle, size: 14, color: Colors.green),
+                  SizedBox(width: 4),
+                  Text('Campaña activa',
+                      style: TextStyle(color: Colors.green, fontSize: 12)),
+                ],
+              )
+            : null,
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () {
           context.push('${AppRouter.patientList}/${empresa.id}');

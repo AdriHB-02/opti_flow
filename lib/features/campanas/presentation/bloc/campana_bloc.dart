@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/assign_doctor_to_campana_usecase.dart';
 import '../../domain/usecases/create_campana_usecase.dart';
 import '../../domain/usecases/get_campana_progress_usecase.dart';
+import '../../domain/usecases/get_campanas_by_doctor_usecase.dart';
 import '../../domain/usecases/import_pacientes_reconsulta_usecase.dart';
 import 'campana_event.dart';
 import 'campana_state.dart';
@@ -12,21 +13,25 @@ class CampanaBloc extends Bloc<CampanaEvent, CampanaState> {
   final AssignDoctorToCampanaUseCase _assignDoctorToCampanaUseCase;
   final GetCampanaProgressUseCase _getCampanaProgressUseCase;
   final ImportPacientesReconsultaUseCase _importPacientesReconsultaUseCase;
+  final GetCampanasByDoctorUseCase _getCampanasByDoctorUseCase;
 
   CampanaBloc({
     required CreateCampanaUseCase createCampanaUseCase,
     required AssignDoctorToCampanaUseCase assignDoctorToCampanaUseCase,
     required GetCampanaProgressUseCase getCampanaProgressUseCase,
     required ImportPacientesReconsultaUseCase importPacientesReconsultaUseCase,
+    required GetCampanasByDoctorUseCase getCampanasByDoctorUseCase,
   })  : _createCampanaUseCase = createCampanaUseCase,
         _assignDoctorToCampanaUseCase = assignDoctorToCampanaUseCase,
         _getCampanaProgressUseCase = getCampanaProgressUseCase,
         _importPacientesReconsultaUseCase = importPacientesReconsultaUseCase,
+        _getCampanasByDoctorUseCase = getCampanasByDoctorUseCase,
         super(const CampanaInitial()) {
     on<CreateCampana>(_onCreateCampana);
     on<AssignDoctor>(_onAssignDoctor);
     on<LoadProgress>(_onLoadProgress);
     on<ImportReconsulta>(_onImportReconsulta);
+    on<LoadCampanas>(_onLoadCampanas);
   }
 
   Future<void> _onCreateCampana(
@@ -88,6 +93,20 @@ class CampanaBloc extends Bloc<CampanaEvent, CampanaState> {
     emit(result.fold(
       (failure) => CampanaError(failure.message),
       (_) => const ReconsultaImportada(),
+    ));
+  }
+
+  Future<void> _onLoadCampanas(
+    LoadCampanas event,
+    Emitter<CampanaState> emit,
+  ) async {
+    emit(const CampanaLoading());
+    final result = await _getCampanasByDoctorUseCase(
+      GetCampanasByDoctorParams(doctorId: event.doctorId),
+    );
+    emit(result.fold(
+      (failure) => CampanaError(failure.message),
+      (campanas) => CampanasLoaded(campanas: campanas),
     ));
   }
 }
