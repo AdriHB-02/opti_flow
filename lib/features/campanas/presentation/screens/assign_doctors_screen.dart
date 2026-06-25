@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -27,11 +29,17 @@ class _AssignDoctorsScreenState extends State<AssignDoctorsScreen> {
   bool _loading = true;
   String? _error;
   bool _asignando = false;
+  String? _progressMessage;
 
   @override
   void initState() {
     super.initState();
     _loadDoctors();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Future<void> _loadDoctors() async {
@@ -55,55 +63,86 @@ class _AssignDoctorsScreenState extends State<AssignDoctorsScreen> {
     );
   }
 
-  void _asignar() {
+  Future<void> _asignar() async {
     if (_selectedIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Selecciona al menos un doctor')),
       );
       return;
     }
-    setState(() => _asignando = true);
 
-    for (final doctorId in _selectedIds) {
-      context.read<CampanaBloc>().add(
-            AssignDoctor(
-              campanaId: widget.campanaId,
-              doctorId: doctorId,
-            ),
-          );
+    final bloc = context.read<CampanaBloc>();
+    final ids = List<String>.from(_selectedIds);
+    int successCount = 0;
+    final List<String> errors = [];
+
+    setState(() {
+      _asignando = true;
+      _progressMessage = 'Asignando 0/${ids.length}...';
+    });
+
+    for (int i = 0; i < ids.length; i++) {
+      if (!mounted) return;
+      setState(() => _progressMessage = 'Asignando ${i + 1}/${ids.length}...');
+
+      final completer = Completer<CampanaState>();
+      StreamSubscription? sub;
+      sub = bloc.stream.listen((state) {
+        if (!completer.isCompleted &&
+            (state is DoctorAssigned || state is CampanaError)) {
+          completer.complete(state);
+          sub?.cancel();
+        }
+      });
+
+      bloc.add(AssignDoctor(campanaId: widget.campanaId, doctorId: ids[i]));
+
+      final result = await completer.future
+          .timeout(const Duration(seconds: 15));
+
+      if (result is DoctorAssigned) {
+        successCount++;
+      } else if (result is CampanaError) {
+        errors.add(ids[i]);
+      }
     }
 
-    setState(() => _asignando = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${_selectedIds.length} doctor(es) asignado(s)')),
-    );
-    context.pop();
+    if (!mounted) return;
+    setState(() {
+      _asignando = false;
+      _progressMessage = null;
+    });
+
+    if (errors.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$successCount doctor(es) asignado(s) correctamente')),
+      );
+      context.pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$successCount asignados, ${errors.length} fallos'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<CampanaBloc, CampanaState>(
-      listener: (context, state) {
-        if (state is CampanaError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
-        }
-      },
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Asignar Doctores')),
-        body: _buildBody(),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _asignando ? null : _asignar,
-          icon: _asignando
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.check),
-          label: Text('Asignar (${_selectedIds.length})'),
-        ),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Asignar Doctores')),
+      body: _buildBody(),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _asignando ? null : () => _asignar(),
+        icon: _asignando
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.check),
+        label: Text(_asignando ? 'Asignando...' : 'Asignar (${_selectedIds.length})'),
       ),
     );
   }
@@ -131,27 +170,42 @@ class _AssignDoctorsScreenState extends State<AssignDoctorsScreen> {
       return const Center(child: Text('No hay doctores disponibles'));
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _doctors.length,
-      itemBuilder: (context, index) {
-        final doctor = _doctors[index];
-        final selected = _selectedIds.contains(doctor.id);
-        return CheckboxListTile(
-          title: Text(doctor.nombre),
-          subtitle: Text(doctor.email),
-          value: selected,
-          onChanged: (val) {
-            setState(() {
-              if (val == true) {
-                _selectedIds.add(doctor.id);
-              } else {
-                _selectedIds.remove(doctor.id);
-              }
-            });
-          },
-        );
-      },
+    return Column(
+      children: [
+        if (_asignando && _progressMessage != null)
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Text(_progressMessage!,
+                style: const TextStyle(color: Colors.teal)),
+          ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: _doctors.length,
+            itemBuilder: (context, index) {
+              final doctor = _doctors[index];
+              final selected = _selectedIds.contains(doctor.id);
+              final disabled = _asignando;
+              return CheckboxListTile(
+                title: Text(doctor.nombre),
+                subtitle: Text(doctor.email),
+                value: selected,
+                onChanged: disabled
+                    ? null
+                    : (val) {
+                        setState(() {
+                          if (val == true) {
+                            _selectedIds.add(doctor.id);
+                          } else {
+                            _selectedIds.remove(doctor.id);
+                          }
+                        });
+                      },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

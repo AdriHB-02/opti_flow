@@ -51,16 +51,16 @@ class AppRouter {
       GoRoute(
         path: jefeDashboard,
         name: 'jefeDashboard',
-        builder: (context, state) => BlocProvider<CampanaBloc>(
-          create: (_) => di.sl<CampanaBloc>(),
+        builder: (context, state) => BlocProvider<CampanaBloc>.value(
+          value: di.sl<CampanaBloc>(),
           child: const JefeDashboardScreen(),
         ),
       ),
       GoRoute(
         path: jefeNewCampana,
         name: 'jefeNewCampana',
-        builder: (context, state) => BlocProvider<CampanaBloc>(
-          create: (_) => di.sl<CampanaBloc>(),
+        builder: (context, state) => BlocProvider<CampanaBloc>.value(
+          value: di.sl<CampanaBloc>(),
           child: const NewCampanaScreen(),
         ),
       ),
@@ -69,8 +69,8 @@ class AppRouter {
         name: 'jefeAssignDoctors',
         builder: (context, state) {
           final campanaId = state.pathParameters['campanaId']!;
-          return BlocProvider<CampanaBloc>(
-            create: (_) => di.sl<CampanaBloc>(),
+          return BlocProvider<CampanaBloc>.value(
+            value: di.sl<CampanaBloc>(),
             child: AssignDoctorsScreen(campanaId: campanaId),
           );
         },
@@ -80,8 +80,8 @@ class AppRouter {
         name: 'jefeCampanaProgress',
         builder: (context, state) {
           final campanaId = state.pathParameters['campanaId']!;
-          return BlocProvider<CampanaBloc>(
-            create: (_) => di.sl<CampanaBloc>(),
+          return BlocProvider<CampanaBloc>.value(
+            value: di.sl<CampanaBloc>(),
             child: CampanaProgressScreen(campanaId: campanaId),
           );
         },

@@ -99,6 +99,8 @@ class _NewCampanaScreenState extends State<NewCampanaScreen> {
       campanasAnteriores: _campanasAnteriores!,
     );
 
+    if (!mounted) return;
+
     if (action == null || action == HistorialDialogAction.cancelar) {
       setState(() => _creando = false);
       return;
@@ -168,6 +170,7 @@ class _NewCampanaScreenState extends State<NewCampanaScreen> {
                       labelText: 'ID de Empresa',
                       border: OutlineInputBorder(),
                     ),
+                    maxLength: 50,
                     validator: (v) =>
                         v == null || v.trim().isEmpty ? 'Requerido' : null,
                   ),
@@ -178,6 +181,7 @@ class _NewCampanaScreenState extends State<NewCampanaScreen> {
                       labelText: 'Nombre de Empresa',
                       border: OutlineInputBorder(),
                     ),
+                    maxLength: 100,
                     validator: (v) =>
                         v == null || v.trim().isEmpty ? 'Requerido' : null,
                   ),
@@ -188,6 +192,7 @@ class _NewCampanaScreenState extends State<NewCampanaScreen> {
                       labelText: 'Lugar',
                       border: OutlineInputBorder(),
                     ),
+                    maxLength: 100,
                     validator: (v) =>
                         v == null || v.trim().isEmpty ? 'Requerido' : null,
                   ),

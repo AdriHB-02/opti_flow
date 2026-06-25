@@ -86,9 +86,16 @@ class CreateCampanaUseCase
       );
 
       final existeHistorial = checkResult.fold(
-        (failure) => false,
+        (failure) => null,
         (exists) => exists,
       );
+
+      if (existeHistorial == null) {
+        return checkResult.fold(
+          (failure) => Left(failure),
+          (_) => const Right(CreateCampanaResult()),
+        );
+      }
 
       if (existeHistorial) {
         return const Right(CreateCampanaResult(existeHistorialPrevio: true));

@@ -155,7 +155,7 @@ Future<void> init() async {
     () => HistoriaBloc(getHistoriasByPacienteUseCase: sl()),
   );
 
-  sl.registerFactory<CampanaBloc>(
+  sl.registerLazySingleton<CampanaBloc>(
     () => CampanaBloc(
       createCampanaUseCase: sl(),
       assignDoctorToCampanaUseCase: sl(),
