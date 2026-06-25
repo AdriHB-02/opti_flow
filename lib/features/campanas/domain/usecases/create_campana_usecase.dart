@@ -54,16 +54,16 @@ class CreateCampanaParams extends Equatable {
 class CreateCampanaResult extends Equatable {
   final CampanaEntity? campanaCreada;
   final List<CampanaEntity> campanasAnteriores;
-
-  bool get existeHistorialPrevio => campanasAnteriores.isNotEmpty;
+  final bool existeHistorialPrevio;
 
   const CreateCampanaResult({
     this.campanaCreada,
     this.campanasAnteriores = const [],
+    this.existeHistorialPrevio = false,
   });
 
   @override
-  List<Object?> get props => [campanaCreada, campanasAnteriores];
+  List<Object?> get props => [campanaCreada, campanasAnteriores, existeHistorialPrevio];
 }
 
 class CreateCampanaUseCase
@@ -87,9 +87,7 @@ class CreateCampanaUseCase
     );
 
     if (existeHistorial) {
-      return Left(CacheFailure(
-        'Ya existe un historial para ${params.nombreEmpresa} en ${params.lugar}',
-      ));
+      return const Right(CreateCampanaResult(existeHistorialPrevio: true));
     }
 
     final campanaEntity = params.toEntity();

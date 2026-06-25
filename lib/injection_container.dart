@@ -34,6 +34,7 @@ import 'features/campanas/domain/usecases/create_campana_usecase.dart';
 import 'features/campanas/domain/usecases/get_available_doctors_usecase.dart';
 import 'features/campanas/domain/usecases/get_campana_progress_usecase.dart';
 import 'features/campanas/domain/usecases/import_pacientes_reconsulta_usecase.dart';
+import 'features/campanas/presentation/bloc/campana_bloc.dart';
 
 import 'core/database/database_helper.dart';
 
@@ -148,5 +149,14 @@ Future<void> init() async {
 
   sl.registerFactory<HistoriaBloc>(
     () => HistoriaBloc(getHistoriasByPacienteUseCase: sl()),
+  );
+
+  sl.registerFactory<CampanaBloc>(
+    () => CampanaBloc(
+      createCampanaUseCase: sl(),
+      assignDoctorToCampanaUseCase: sl(),
+      getCampanaProgressUseCase: sl(),
+      importPacientesReconsultaUseCase: sl(),
+    ),
   );
 }
