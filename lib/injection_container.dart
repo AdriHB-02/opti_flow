@@ -38,6 +38,10 @@ Future<void> init() async {
   // ── Supabase ──
   sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
 
+  // ── Database ──
+  sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
+  await sl<DatabaseHelper>().database;
+
   // ── Data Sources ──
   sl.registerLazySingleton<RemoteAuthDataSource>(
     () => RemoteAuthDataSource(supabaseClient: sl()),
@@ -120,7 +124,4 @@ Future<void> init() async {
   sl.registerFactory<HistoriaBloc>(
     () => HistoriaBloc(getHistoriasByPacienteUseCase: sl()),
   );
-
-  // ── Database ──
-  await DatabaseHelper().database;
 }
