@@ -4,7 +4,9 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/errors/data_source_exception.dart';
+import '../../../../features/auth/data/models/user_dto.dart';
 import '../models/campana_dto.dart';
+import '../models/doctor_progress_dto.dart';
 
 class LocalCampanaDataSource {
   final DatabaseHelper _databaseHelper;
@@ -86,6 +88,57 @@ class LocalCampanaDataSource {
       );
     } on DatabaseException catch (e) {
       throw DataSourceException('Error al asignar doctor a campaña', originalError: e);
+    }
+  }
+
+  Future<List<DoctorProgressDTO>> getCampanaProgress(String campanaId) async {
+    try {
+      final db = await _databaseHelper.database;
+      final maps = await db.rawQuery(
+        '''
+        SELECT dc.doctor_id, d.nombre as doctor_nombre, COUNT(p.id) as total_pacientes
+        FROM ${AppConstants.tableDoctorCampana} dc
+        INNER JOIN ${AppConstants.tableDoctores} d ON dc.doctor_id = d.id
+        LEFT JOIN ${AppConstants.tableDependencias} dep ON dep.campana_id = dc.campana_id
+        LEFT JOIN ${AppConstants.tablePacientes} p
+          ON p.dependencia_id = dep.id AND p.doctor_id = dc.doctor_id
+        WHERE dc.campana_id = ?
+        GROUP BY dc.doctor_id, d.nombre
+        ''',
+        [campanaId],
+      );
+      return maps.map((map) => DoctorProgressDTO.fromMap(map)).toList();
+    } on DatabaseException catch (e) {
+      throw DataSourceException(
+        'Error al obtener progreso de campaña',
+        originalError: e,
+      );
+    }
+  }
+
+  Future<List<UserDTO>> getAvailableDoctors(String campanaId) async {
+    try {
+      final db = await _databaseHelper.database;
+      final maps = await db.rawQuery(
+        '''
+        SELECT *
+        FROM ${AppConstants.tableDoctores}
+        WHERE rol = 'USER' AND activo = 1
+          AND id NOT IN (
+            SELECT doctor_id
+            FROM ${AppConstants.tableDoctorCampana}
+            WHERE campana_id = ?
+          )
+        ORDER BY nombre ASC
+        ''',
+        [campanaId],
+      );
+      return maps.map((map) => UserDTO.fromMap(map)).toList();
+    } on DatabaseException catch (e) {
+      throw DataSourceException(
+        'Error al obtener doctores disponibles',
+        originalError: e,
+      );
     }
   }
 }

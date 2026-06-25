@@ -18,4 +18,8 @@ abstract class IPatientRepository {
   );
 
   Future<Either<Failure, PatientEntity>> getPatientById(String patientId);
+
+  Future<Either<Failure, List<PatientEntity>>> getPatientsByCampanaId(
+    String campanaId,
+  );
 }

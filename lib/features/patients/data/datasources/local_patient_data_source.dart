@@ -78,4 +78,27 @@ class LocalPatientDataSource {
       throw DataSourceException('Error al obtener paciente por id', originalError: e);
     }
   }
+
+  Future<List<PatientDTO>> getPatientsByCampanaId(String campanaId) async {
+    try {
+      final db = await _databaseHelper.database;
+      final maps = await db.rawQuery(
+        '''
+        SELECT p.*
+        FROM ${AppConstants.tablePacientes} p
+        INNER JOIN ${AppConstants.tableDependencias} dep
+          ON p.dependencia_id = dep.id
+        WHERE dep.campana_id = ?
+        ORDER BY p.created_at DESC
+        ''',
+        [campanaId],
+      );
+      return maps.map((map) => PatientDTO.fromMap(map)).toList();
+    } on DatabaseException catch (e) {
+      throw DataSourceException(
+        'Error al obtener pacientes por campaña',
+        originalError: e,
+      );
+    }
+  }
 }

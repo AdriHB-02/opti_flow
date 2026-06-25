@@ -1,7 +1,9 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../../../features/auth/domain/entities/user_entity.dart';
 import '../entities/campana_entity.dart';
+import '../entities/doctor_progress.dart';
 
 abstract class ICampanaRepository {
   Future<Either<Failure, CampanaEntity>> createCampana(CampanaEntity campana);
@@ -16,4 +18,12 @@ abstract class ICampanaRepository {
   );
 
   Future<Either<Failure, void>> assignDoctor(String campanaId, String doctorId);
+
+  Future<Either<Failure, List<DoctorProgress>>> getCampanaProgress(
+    String campanaId,
+  );
+
+  Future<Either<Failure, List<UserEntity>>> getAvailableDoctors(
+    String campanaId,
+  );
 }

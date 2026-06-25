@@ -2,7 +2,9 @@ import 'package:dartz/dartz.dart';
 
 import '../../../../core/errors/data_source_exception.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../features/auth/domain/entities/user_entity.dart';
 import '../../domain/entities/campana_entity.dart';
+import '../../domain/entities/doctor_progress.dart';
 import '../../domain/repositories/i_campana_repository.dart';
 import '../datasources/local_campana_data_source.dart';
 import '../models/campana_dto.dart';
@@ -65,6 +67,32 @@ class CampanaRepository implements ICampanaRepository {
       return const Right(null);
     } on DataSourceException {
       return Left(CacheFailure('Error al asignar doctor a campaña'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<DoctorProgress>>> getCampanaProgress(
+    String campanaId,
+  ) async {
+    try {
+      final dtos = await _localDataSource.getCampanaProgress(campanaId);
+      final entities = dtos.map((dto) => dto.toEntity()).toList();
+      return Right(entities);
+    } on DataSourceException {
+      return Left(CacheFailure('Error al obtener progreso de campaña'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<UserEntity>>> getAvailableDoctors(
+    String campanaId,
+  ) async {
+    try {
+      final dtos = await _localDataSource.getAvailableDoctors(campanaId);
+      final entities = dtos.map((dto) => dto.toEntity()).toList();
+      return Right(entities);
+    } on DataSourceException {
+      return Left(CacheFailure('Error al obtener doctores disponibles'));
     }
   }
 }

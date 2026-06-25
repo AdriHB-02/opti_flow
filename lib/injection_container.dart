@@ -29,6 +29,11 @@ import 'features/patients/presentation/bloc/historia_bloc.dart';
 import 'features/campanas/data/datasources/local_campana_data_source.dart';
 import 'features/campanas/data/repositories/campana_repository.dart';
 import 'features/campanas/domain/repositories/i_campana_repository.dart';
+import 'features/campanas/domain/usecases/assign_doctor_to_campana_usecase.dart';
+import 'features/campanas/domain/usecases/create_campana_usecase.dart';
+import 'features/campanas/domain/usecases/get_available_doctors_usecase.dart';
+import 'features/campanas/domain/usecases/get_campana_progress_usecase.dart';
+import 'features/campanas/domain/usecases/import_pacientes_reconsulta_usecase.dart';
 
 import 'core/database/database_helper.dart';
 
@@ -102,6 +107,26 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<GetHistoriasByPacienteUseCase>(
     () => GetHistoriasByPacienteUseCase(sl()),
+  );
+
+  // ── Campaña Use Cases ──
+  sl.registerLazySingleton<CreateCampanaUseCase>(
+    () => CreateCampanaUseCase(sl()),
+  );
+  sl.registerLazySingleton<AssignDoctorToCampanaUseCase>(
+    () => AssignDoctorToCampanaUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetCampanaProgressUseCase>(
+    () => GetCampanaProgressUseCase(sl()),
+  );
+  sl.registerLazySingleton<ImportPacientesReconsultaUseCase>(
+    () => ImportPacientesReconsultaUseCase(
+      patientRepository: sl(),
+      campanaRepository: sl(),
+    ),
+  );
+  sl.registerLazySingleton<GetAvailableDoctorsUseCase>(
+    () => GetAvailableDoctorsUseCase(sl()),
   );
 
   // ── BLoCs ──

@@ -70,4 +70,17 @@ class PatientRepository implements IPatientRepository {
       return Left(CacheFailure('Error al obtener paciente'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<PatientEntity>>> getPatientsByCampanaId(
+    String campanaId,
+  ) async {
+    try {
+      final dtos = await _localDataSource.getPatientsByCampanaId(campanaId);
+      final entities = dtos.map((dto) => dto.toEntity()).toList();
+      return Right(entities);
+    } on DataSourceException {
+      return Left(CacheFailure('Error al obtener pacientes por campaña'));
+    }
+  }
 }
