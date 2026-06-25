@@ -9,9 +9,13 @@ abstract class HistoriaEvent extends Equatable {
 
 class LoadHistorias extends HistoriaEvent {
   final String pacienteId;
+  final String doctorId;
 
-  const LoadHistorias({required this.pacienteId});
+  const LoadHistorias({
+    required this.pacienteId,
+    required this.doctorId,
+  });
 
   @override
-  List<Object?> get props => [pacienteId];
+  List<Object?> get props => [pacienteId, doctorId];
 }

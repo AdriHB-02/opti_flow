@@ -28,9 +28,9 @@ class HistoriaRepository implements IHistoriaRepository {
 
   @override
   Future<Either<Failure, List<HistoriaClinicaEntity>>>
-      getHistoriasByPaciente(String pacienteId) async {
+      getHistoriasByPaciente(String pacienteId, String doctorId) async {
     try {
-      final dtos = await _localDataSource.getByPaciente(pacienteId);
+      final dtos = await _localDataSource.getByPaciente(pacienteId, doctorId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
     } on DataSourceException {

@@ -68,23 +68,24 @@ void main() {
 
   group('getPatients', () {
     test('debe retornar Right con lista de entidades', () async {
-      when(() => mockDataSource.getPatients(any()))
+      when(() => mockDataSource.getPatients(any(), any()))
           .thenAnswer((_) async => [testDto]);
 
-      final result = await repository.getPatients(testDepId);
+      final result = await repository.getPatients(testDepId, testDoctorId);
 
       expect(result.isRight(), true);
       final patients = result.getOrElse(() => []);
       expect(patients.length, 1);
       expect(patients.first.nombreCompleto, 'Juan Test');
-      verify(() => mockDataSource.getPatients(testDepId)).called(1);
+      verify(() => mockDataSource.getPatients(testDepId, testDoctorId))
+          .called(1);
     });
 
     test('debe retornar Left(CacheFailure) cuando falla', () async {
-      when(() => mockDataSource.getPatients(any()))
+      when(() => mockDataSource.getPatients(any(), any()))
           .thenThrow(DataSourceException('Error'));
 
-      final result = await repository.getPatients(testDepId);
+      final result = await repository.getPatients(testDepId, testDoctorId);
 
       expect(result.isLeft(), true);
     });
@@ -92,21 +93,25 @@ void main() {
 
   group('searchByName', () {
     test('debe retornar Right con resultados filtrados', () async {
-      when(() => mockDataSource.searchByName(any(), any()))
+      when(() => mockDataSource.searchByName(any(), any(), any()))
           .thenAnswer((_) async => [testDto]);
 
-      final result = await repository.searchByName('Juan', testDepId);
+      final result =
+          await repository.searchByName('Juan', testDepId, testDoctorId);
 
       expect(result.isRight(), true);
       expect(result.getOrElse(() => []).length, 1);
-      verify(() => mockDataSource.searchByName('Juan', testDepId)).called(1);
+      verify(
+        () => mockDataSource.searchByName('Juan', testDepId, testDoctorId),
+      ).called(1);
     });
 
     test('debe retornar Left(CacheFailure) cuando falla', () async {
-      when(() => mockDataSource.searchByName(any(), any()))
+      when(() => mockDataSource.searchByName(any(), any(), any()))
           .thenThrow(DataSourceException('Error'));
 
-      final result = await repository.searchByName('Juan', testDepId);
+      final result =
+          await repository.searchByName('Juan', testDepId, testDoctorId);
 
       expect(result.isLeft(), true);
     });

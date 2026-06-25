@@ -11,11 +11,15 @@ abstract class PatientEvent extends Equatable {
 
 class LoadPatients extends PatientEvent {
   final String dependenciaId;
+  final String doctorId;
 
-  const LoadPatients({required this.dependenciaId});
+  const LoadPatients({
+    required this.dependenciaId,
+    required this.doctorId,
+  });
 
   @override
-  List<Object?> get props => [dependenciaId];
+  List<Object?> get props => [dependenciaId, doctorId];
 }
 
 class SavePatient extends PatientEvent {
@@ -30,9 +34,14 @@ class SavePatient extends PatientEvent {
 class SearchPatient extends PatientEvent {
   final String query;
   final String dependenciaId;
+  final String doctorId;
 
-  const SearchPatient({required this.query, required this.dependenciaId});
+  const SearchPatient({
+    required this.query,
+    required this.dependenciaId,
+    required this.doctorId,
+  });
 
   @override
-  List<Object?> get props => [query, dependenciaId];
+  List<Object?> get props => [query, dependenciaId, doctorId];
 }

@@ -10,6 +10,7 @@ abstract class IHistoriaRepository {
 
   Future<Either<Failure, List<HistoriaClinicaEntity>>> getHistoriasByPaciente(
     String pacienteId,
+    String doctorId,
   );
 
   Future<Either<Failure, HistoriaClinicaEntity?>> getHistoriaAnterior(

@@ -1,8 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/database/database_helper.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/usecases/usecase.dart';
+import '../../../../core/utils/session_manager.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/biometric_login_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
@@ -44,6 +46,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
+    try {
+      await DatabaseHelper().clearAllData();
+    } catch (_) {}
+    await SessionManager.clear();
     final result = await _logoutUseCase(const NoParams());
     emit(result.fold(
       (failure) => AuthError(failure.message),

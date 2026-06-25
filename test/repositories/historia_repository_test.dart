@@ -72,32 +72,36 @@ void main() {
 
   group('getHistoriasByPaciente', () {
     test('debe retornar Right con lista de historias', () async {
-      when(() => mockDataSource.getByPaciente(any()))
+      when(() => mockDataSource.getByPaciente(any(), any()))
           .thenAnswer((_) async => [testDto]);
 
-      final result = await repository.getHistoriasByPaciente(testPacienteId);
+      final result =
+          await repository.getHistoriasByPaciente(testPacienteId, testDoctorId);
 
       expect(result.isRight(), true);
       expect(result.getOrElse(() => []).length, 1);
       expect(result.getOrElse(() => []).first.diagnosticoTexto, 'Miopía');
-      verify(() => mockDataSource.getByPaciente(testPacienteId)).called(1);
+      verify(() => mockDataSource.getByPaciente(testPacienteId, testDoctorId))
+          .called(1);
     });
 
     test('debe retornar Right con lista vacía si no hay historias', () async {
-      when(() => mockDataSource.getByPaciente(any()))
+      when(() => mockDataSource.getByPaciente(any(), any()))
           .thenAnswer((_) async => []);
 
-      final result = await repository.getHistoriasByPaciente(testPacienteId);
+      final result =
+          await repository.getHistoriasByPaciente(testPacienteId, testDoctorId);
 
       expect(result.isRight(), true);
       expect(result.getOrElse(() => []).isEmpty, true);
     });
 
     test('debe retornar Left(CacheFailure) cuando falla', () async {
-      when(() => mockDataSource.getByPaciente(any()))
+      when(() => mockDataSource.getByPaciente(any(), any()))
           .thenThrow(DataSourceException('Error'));
 
-      final result = await repository.getHistoriasByPaciente(testPacienteId);
+      final result =
+          await repository.getHistoriasByPaciente(testPacienteId, testDoctorId);
 
       expect(result.isLeft(), true);
     });

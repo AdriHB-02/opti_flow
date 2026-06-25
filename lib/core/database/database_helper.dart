@@ -288,6 +288,21 @@ class DatabaseHelper {
     ''');
   }
 
+  Future<void> clearAllData() async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(AppConstants.tableSyncLog);
+      await txn.delete(AppConstants.tableHistoriasClinicas);
+      await txn.delete(AppConstants.tablePacientes);
+      await txn.delete(AppConstants.tableDoctorCampana);
+      await txn.delete(AppConstants.tableCampanas);
+      await txn.delete(AppConstants.tableDependencias);
+      await txn.delete(AppConstants.tablePagos);
+      await txn.delete(AppConstants.tableEmpresas);
+      await txn.delete(AppConstants.tableDoctores);
+    });
+  }
+
   Future<void> batchInsert(String table, List<Map<String, dynamic>> rows) async {
     if (rows.isEmpty) return;
     final db = await database;

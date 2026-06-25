@@ -106,7 +106,8 @@ void main() {
       );
 
       final saveResult = await patientRepository.savePatient(patient);
-      final loadedResult = await patientRepository.getPatients(testDependenciaId);
+      final loadedResult =
+          await patientRepository.getPatients(testDependenciaId, testDoctorId);
 
       expect(saveResult.isRight(), true);
       expect(loadedResult.isRight(), true);
@@ -130,8 +131,10 @@ void main() {
       );
 
       await patientRepository.savePatient(patient);
-      final result = await patientRepository.searchByName('María', testDependenciaId);
-      final resultNoMatch = await patientRepository.searchByName('Pedro', testDependenciaId);
+      final result =
+          await patientRepository.searchByName('María', testDependenciaId, testDoctorId);
+      final resultNoMatch =
+          await patientRepository.searchByName('Pedro', testDependenciaId, testDoctorId);
 
       expect(result.isRight(), true);
       expect(resultNoMatch.isRight(), true);
@@ -179,7 +182,8 @@ void main() {
       );
 
       final saveResult = await historiaRepository.saveHistoria(historia);
-      final loadedResult = await historiaRepository.getHistoriasByPaciente(testPacienteId);
+      final loadedResult =
+          await historiaRepository.getHistoriasByPaciente(testPacienteId, testDoctorId);
 
       expect(saveResult.isRight(), true);
       expect(loadedResult.isRight(), true);

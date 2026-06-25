@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/session_manager.dart';
 import '../../domain/entities/historia_clinica_entity.dart';
 import '../bloc/historia_bloc.dart';
 import '../bloc/historia_event.dart';
@@ -25,9 +26,19 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
   @override
   void initState() {
     super.initState();
-    context
-        .read<HistoriaBloc>()
-        .add(LoadHistorias(pacienteId: widget.patientId));
+    _loadHistorias();
+  }
+
+  Future<void> _loadHistorias() async {
+    final session = await SessionManager.load();
+    final doctorId = session?['id'] as String? ?? '';
+    if (!mounted) return;
+    context.read<HistoriaBloc>().add(
+          LoadHistorias(
+            pacienteId: widget.patientId,
+            doctorId: doctorId,
+          ),
+        );
   }
 
   @override
@@ -50,11 +61,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
               );
             }
             return RefreshIndicator(
-              onRefresh: () async {
-                context
-                    .read<HistoriaBloc>()
-                    .add(LoadHistorias(pacienteId: widget.patientId));
-              },
+              onRefresh: _loadHistorias,
               child: ListView.builder(
                 padding: const EdgeInsets.all(8),
                 itemCount: historias.length,
@@ -74,11 +81,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
                       style: const TextStyle(color: Colors.red)),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
-                      context
-                          .read<HistoriaBloc>()
-                          .add(LoadHistorias(pacienteId: widget.patientId));
-                    },
+                    onPressed: _loadHistorias,
                     child: const Text('Reintentar'),
                   ),
                 ],
@@ -137,8 +140,8 @@ class _HistoriaCard extends StatelessWidget {
                 const Icon(Icons.location_on, size: 14, color: Colors.grey),
                 const SizedBox(width: 4),
                 Text(
-                  '${historia.latitud.toStringAsFixed(4)}, '
-                  '${historia.longitud.toStringAsFixed(4)}',
+                  '${historia.latitud.toStringAsFixed(2)}, '
+                  '${historia.longitud.toStringAsFixed(2)}',
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
                 const Spacer(),

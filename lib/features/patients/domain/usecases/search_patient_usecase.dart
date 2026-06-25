@@ -9,14 +9,16 @@ import '../repositories/i_patient_repository.dart';
 class SearchPatientParams extends Equatable {
   final String query;
   final String dependenciaId;
+  final String doctorId;
 
   const SearchPatientParams({
     required this.query,
     required this.dependenciaId,
+    required this.doctorId,
   });
 
   @override
-  List<Object?> get props => [query, dependenciaId];
+  List<Object?> get props => [query, dependenciaId, doctorId];
 }
 
 class SearchPatientUseCase
@@ -28,6 +30,10 @@ class SearchPatientUseCase
   @override
   Future<Either<Failure, List<PatientEntity>>> call(
       SearchPatientParams params) async {
-    return repository.searchByName(params.query, params.dependenciaId);
+    return repository.searchByName(
+      params.query,
+      params.dependenciaId,
+      params.doctorId,
+    );
   }
 }

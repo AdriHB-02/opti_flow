@@ -8,11 +8,15 @@ import '../repositories/i_patient_repository.dart';
 
 class GetPatientsParams extends Equatable {
   final String dependenciaId;
+  final String doctorId;
 
-  const GetPatientsParams({required this.dependenciaId});
+  const GetPatientsParams({
+    required this.dependenciaId,
+    required this.doctorId,
+  });
 
   @override
-  List<Object?> get props => [dependenciaId];
+  List<Object?> get props => [dependenciaId, doctorId];
 }
 
 class GetPatientsUseCase
@@ -24,6 +28,6 @@ class GetPatientsUseCase
   @override
   Future<Either<Failure, List<PatientEntity>>> call(
       GetPatientsParams params) async {
-    return repository.getPatients(params.dependenciaId);
+    return repository.getPatients(params.dependenciaId, params.doctorId);
   }
 }

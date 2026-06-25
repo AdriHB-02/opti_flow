@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../../../core/router/app_router.dart';
+import '../../../../core/utils/session_manager.dart';
 import '../../domain/entities/patient_entity.dart';
 import '../bloc/patient_bloc.dart';
 import '../bloc/patient_event.dart';
@@ -22,26 +23,44 @@ class PatientListScreen extends StatefulWidget {
 class _PatientListScreenState extends State<PatientListScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _showSearch = false;
+  String? _doctorId;
 
   @override
   void initState() {
     super.initState();
+    _initDoctorId();
+  }
+
+  Future<void> _initDoctorId() async {
+    final session = await SessionManager.load();
+    if (!mounted) return;
+    final doctorId = session?['id'] as String? ?? '';
+    setState(() => _doctorId = doctorId);
     _loadPatients();
   }
 
   void _loadPatients() {
-    context
-        .read<PatientBloc>()
-        .add(LoadPatients(dependenciaId: widget.dependenciaId));
+    if (_doctorId == null) return;
+    context.read<PatientBloc>().add(
+          LoadPatients(
+            dependenciaId: widget.dependenciaId,
+            doctorId: _doctorId!,
+          ),
+        );
   }
 
   void _onSearch(String query) {
+    if (_doctorId == null) return;
     if (query.trim().isEmpty) {
       _loadPatients();
     } else {
-      context
-          .read<PatientBloc>()
-          .add(SearchPatient(query: query, dependenciaId: widget.dependenciaId));
+      context.read<PatientBloc>().add(
+            SearchPatient(
+              query: query,
+              dependenciaId: widget.dependenciaId,
+              doctorId: _doctorId!,
+            ),
+          );
     }
   }
 

@@ -33,7 +33,10 @@ class PatientBloc extends Bloc<PatientEvent, PatientState> {
   ) async {
     emit(const PatientLoading());
     final result = await _getPatientsUseCase(
-      GetPatientsParams(dependenciaId: event.dependenciaId),
+      GetPatientsParams(
+        dependenciaId: event.dependenciaId,
+        doctorId: event.doctorId,
+      ),
     );
     emit(_resultToPatientsLoadedOrError(result));
   }
@@ -59,6 +62,7 @@ class PatientBloc extends Bloc<PatientEvent, PatientState> {
       SearchPatientParams(
         query: event.query,
         dependenciaId: event.dependenciaId,
+        doctorId: event.doctorId,
       ),
     );
     emit(_resultToPatientsLoadedOrError(result));

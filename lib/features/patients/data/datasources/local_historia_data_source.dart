@@ -24,13 +24,16 @@ class LocalHistoriaDataSource {
     }
   }
 
-  Future<List<HistoriaClinicaDTO>> getByPaciente(String pacienteId) async {
+  Future<List<HistoriaClinicaDTO>> getByPaciente(
+    String pacienteId,
+    String doctorId,
+  ) async {
     try {
       final db = await _databaseHelper.database;
       final maps = await db.query(
         AppConstants.tableHistoriasClinicas,
-        where: 'paciente_id = ?',
-        whereArgs: [pacienteId],
+        where: 'paciente_id = ? AND doctor_id = ?',
+        whereArgs: [pacienteId, doctorId],
         orderBy: 'fecha_atencion DESC',
       );
       return maps.map((map) => HistoriaClinicaDTO.fromMap(map)).toList();

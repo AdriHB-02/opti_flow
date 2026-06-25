@@ -20,7 +20,10 @@ class HistoriaBloc extends Bloc<HistoriaEvent, HistoriaState> {
   ) async {
     emit(const HistoriaLoading());
     final result = await _getHistoriasByPacienteUseCase(
-      GetHistoriasParams(pacienteId: event.pacienteId),
+      GetHistoriasParams(
+        pacienteId: event.pacienteId,
+        doctorId: event.doctorId,
+      ),
     );
     emit(result.fold(
       (failure) => HistoriaError(failure.message),

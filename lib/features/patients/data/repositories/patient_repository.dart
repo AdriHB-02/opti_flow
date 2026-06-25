@@ -16,9 +16,10 @@ class PatientRepository implements IPatientRepository {
   @override
   Future<Either<Failure, List<PatientEntity>>> getPatients(
     String dependenciaId,
+    String doctorId,
   ) async {
     try {
-      final dtos = await _localDataSource.getPatients(dependenciaId);
+      final dtos = await _localDataSource.getPatients(dependenciaId, doctorId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
     } on DataSourceException {
@@ -43,9 +44,11 @@ class PatientRepository implements IPatientRepository {
   Future<Either<Failure, List<PatientEntity>>> searchByName(
     String name,
     String dependenciaId,
+    String doctorId,
   ) async {
     try {
-      final dtos = await _localDataSource.searchByName(name, dependenciaId);
+      final dtos =
+          await _localDataSource.searchByName(name, dependenciaId, doctorId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
     } on DataSourceException {

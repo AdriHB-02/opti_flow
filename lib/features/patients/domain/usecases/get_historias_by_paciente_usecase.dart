@@ -8,11 +8,15 @@ import '../repositories/i_historia_repository.dart';
 
 class GetHistoriasParams extends Equatable {
   final String pacienteId;
+  final String doctorId;
 
-  const GetHistoriasParams({required this.pacienteId});
+  const GetHistoriasParams({
+    required this.pacienteId,
+    required this.doctorId,
+  });
 
   @override
-  List<Object?> get props => [pacienteId];
+  List<Object?> get props => [pacienteId, doctorId];
 }
 
 class GetHistoriasByPacienteUseCase
@@ -25,6 +29,9 @@ class GetHistoriasByPacienteUseCase
   @override
   Future<Either<Failure, List<HistoriaClinicaEntity>>> call(
       GetHistoriasParams params) async {
-    return repository.getHistoriasByPaciente(params.pacienteId);
+    return repository.getHistoriasByPaciente(
+      params.pacienteId,
+      params.doctorId,
+    );
   }
 }

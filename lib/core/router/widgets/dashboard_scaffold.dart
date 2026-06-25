@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../../features/auth/presentation/bloc/auth_event.dart';
-import '../../utils/session_manager.dart';
 
 class DashboardScaffold extends StatelessWidget {
   final String title;
@@ -15,12 +14,7 @@ class DashboardScaffold extends StatelessWidget {
     return Scaffold(
       body: Center(child: Text(title)),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await SessionManager.clear();
-          if (context.mounted) {
-            context.read<AuthBloc>().add(const LogoutRequested());
-          }
-        },
+        onPressed: () => context.read<AuthBloc>().add(const LogoutRequested()),
         child: const Icon(Icons.logout),
       ),
     );

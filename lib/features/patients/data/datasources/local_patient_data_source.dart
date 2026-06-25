@@ -24,13 +24,16 @@ class LocalPatientDataSource {
     }
   }
 
-  Future<List<PatientDTO>> getPatients(String dependenciaId) async {
+  Future<List<PatientDTO>> getPatients(
+    String dependenciaId,
+    String doctorId,
+  ) async {
     try {
       final db = await _databaseHelper.database;
       final maps = await db.query(
         AppConstants.tablePacientes,
-        where: 'dependencia_id = ?',
-        whereArgs: [dependenciaId],
+        where: 'dependencia_id = ? AND doctor_id = ?',
+        whereArgs: [dependenciaId, doctorId],
         orderBy: 'created_at DESC',
       );
       return maps.map((map) => PatientDTO.fromMap(map)).toList();
@@ -39,13 +42,18 @@ class LocalPatientDataSource {
     }
   }
 
-  Future<List<PatientDTO>> searchByName(String name, String dependenciaId) async {
+  Future<List<PatientDTO>> searchByName(
+    String name,
+    String dependenciaId,
+    String doctorId,
+  ) async {
     try {
       final db = await _databaseHelper.database;
       final maps = await db.query(
         AppConstants.tablePacientes,
-        where: 'dependencia_id = ? AND nombre_completo LIKE ?',
-        whereArgs: [dependenciaId, '%$name%'],
+        where:
+            'dependencia_id = ? AND doctor_id = ? AND nombre_completo LIKE ?',
+        whereArgs: [dependenciaId, doctorId, '%$name%'],
         orderBy: 'created_at DESC',
         limit: 50,
       );

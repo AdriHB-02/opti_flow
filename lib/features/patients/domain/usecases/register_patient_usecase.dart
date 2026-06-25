@@ -101,16 +101,17 @@ class RegisterPatientUseCase
   Future<Either<Failure, void>> call(RegisterPatientParams params) async {
     final patientEither =
         await patientRepository.savePatient(params.toPatientEntity());
-    if (patientEither is Left<Failure, PatientEntity>) {
-      return Left(patientEither.value);
-    }
+    final patientResult = patientEither.fold(
+      (failure) => Left<Failure, void>(failure),
+      (_) => null,
+    );
+    if (patientResult != null) return patientResult;
 
     final historiaEither =
         await historiaRepository.saveHistoria(params.toHistoriaEntity());
-    if (historiaEither is Left<Failure, HistoriaClinicaEntity>) {
-      return Left(historiaEither.value);
-    }
-
-    return const Right(null);
+    return historiaEither.fold(
+      (failure) => Left<Failure, void>(failure),
+      (_) => const Right<Failure, void>(null),
+    );
   }
 }
