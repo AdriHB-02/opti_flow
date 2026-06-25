@@ -12,10 +12,18 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 import 'features/patients/data/datasources/local_patient_data_source.dart';
 import 'features/patients/data/datasources/local_historia_data_source.dart';
+import 'features/patients/data/datasources/local_dependencia_data_source.dart';
 import 'features/patients/data/repositories/historia_repository.dart';
 import 'features/patients/data/repositories/patient_repository.dart';
+import 'features/patients/data/repositories/dependencia_repository.dart';
 import 'features/patients/domain/repositories/i_historia_repository.dart';
 import 'features/patients/domain/repositories/i_patient_repository.dart';
+import 'features/patients/domain/repositories/i_dependencia_repository.dart';
+import 'features/patients/domain/usecases/get_dependencias_usecase.dart';
+import 'features/patients/domain/usecases/get_historias_by_paciente_usecase.dart';
+import 'features/patients/domain/usecases/get_patients_usecase.dart';
+import 'features/patients/domain/usecases/register_patient_usecase.dart';
+import 'features/patients/domain/usecases/search_patient_usecase.dart';
 import 'features/campanas/data/datasources/local_campana_data_source.dart';
 import 'features/campanas/data/repositories/campana_repository.dart';
 import 'features/campanas/domain/repositories/i_campana_repository.dart';
@@ -41,6 +49,9 @@ Future<void> init() async {
   sl.registerLazySingleton<LocalCampanaDataSource>(
     () => LocalCampanaDataSource(databaseHelper: sl()),
   );
+  sl.registerLazySingleton<LocalDependenciaDataSource>(
+    () => LocalDependenciaDataSource(databaseHelper: sl()),
+  );
 
   // ── Repositories ──
   sl.registerLazySingleton<IAuthRepository>(
@@ -55,6 +66,9 @@ Future<void> init() async {
   sl.registerLazySingleton<ICampanaRepository>(
     () => CampanaRepository(localDataSource: sl()),
   );
+  sl.registerLazySingleton<IDependenciaRepository>(
+    () => DependenciaRepository(localDataSource: sl()),
+  );
 
   // ── Use Cases ──
   sl.registerLazySingleton<LoginUseCase>(() => LoginUseCase(sl()));
@@ -62,6 +76,26 @@ Future<void> init() async {
   sl.registerLazySingleton<BiometricLoginUseCase>(() => BiometricLoginUseCase(sl()));
   sl.registerLazySingleton<RecuperarPasswordUseCase>(
     () => RecuperarPasswordUseCase(sl()),
+  );
+
+  // Patient use cases
+  sl.registerLazySingleton<GetPatientsUseCase>(
+    () => GetPatientsUseCase(sl()),
+  );
+  sl.registerLazySingleton<RegisterPatientUseCase>(
+    () => RegisterPatientUseCase(
+      patientRepository: sl(),
+      historiaRepository: sl(),
+    ),
+  );
+  sl.registerLazySingleton<SearchPatientUseCase>(
+    () => SearchPatientUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetDependenciasUseCase>(
+    () => GetDependenciasUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetHistoriasByPacienteUseCase>(
+    () => GetHistoriasByPacienteUseCase(sl()),
   );
 
   // ── BLoCs ──
