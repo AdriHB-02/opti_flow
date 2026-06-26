@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/usecases/usecase.dart';
@@ -7,8 +8,7 @@ import '../entities/campana_entity.dart';
 import '../repositories/i_campana_repository.dart';
 
 class CreateCampanaParams extends Equatable {
-  final String id;
-  final String empresaId;
+  final String? empresaId;
   final String nombreEmpresa;
   final String lugar;
   final DateTime fechaInicio;
@@ -17,8 +17,7 @@ class CreateCampanaParams extends Equatable {
   final bool ignorarHistorial;
 
   const CreateCampanaParams({
-    required this.id,
-    required this.empresaId,
+    this.empresaId,
     required this.nombreEmpresa,
     required this.lugar,
     required this.fechaInicio,
@@ -27,7 +26,7 @@ class CreateCampanaParams extends Equatable {
     this.ignorarHistorial = false,
   });
 
-  CampanaEntity toEntity() {
+  CampanaEntity toEntity(String id, String empresaId) {
     return CampanaEntity(
       id: id,
       empresaId: empresaId,
@@ -43,7 +42,6 @@ class CreateCampanaParams extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
         empresaId,
         nombreEmpresa,
         lugar,
@@ -102,7 +100,26 @@ class CreateCampanaUseCase
       }
     }
 
-    final campanaEntity = params.toEntity();
+    final id = const Uuid().v4();
+    final empresaId = params.empresaId ?? id;
+
+    if (params.empresaId == null) {
+      final empresaResult = await repository.createEmpresa({
+        'id': empresaId,
+        'nombre': params.nombreEmpresa,
+        'lugar': params.lugar,
+        'activa': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+      final empresaFailure = empresaResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (empresaFailure != null) return Left(empresaFailure);
+    }
+
+    final campanaEntity = params.toEntity(id, empresaId);
     return repository.createCampana(campanaEntity).then(
       (result) => result.fold(
         (failure) => Left(failure),

@@ -29,7 +29,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _checkBiometric();
-    _checkSession();
   }
 
   Future<void> _checkBiometric() async {
@@ -38,13 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) setState(() => _biometricAvailable = available);
     } catch (e) {
       debugPrint('[Biometric] canCheckBiometrics falló: $e');
-    }
-  }
-
-  Future<void> _checkSession() async {
-    final session = await SessionManager.load();
-    if (session != null && mounted) {
-      context.read<AuthBloc>().add(const BiometricLoginRequested());
     }
   }
 

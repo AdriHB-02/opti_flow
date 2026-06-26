@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -23,6 +24,8 @@ class LocalCampanaDataSource {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } on DatabaseException catch (e) {
+      debugPrint('[DataSource] insertCampana error: $e');
+      debugPrint('[DataSource] campana.toMap(): ${campana.toMap()}');
       throw DataSourceException('Error al insertar campaña', originalError: e);
     }
   }
@@ -43,6 +46,7 @@ class LocalCampanaDataSource {
       );
       return maps.map((map) => CampanaDTO.fromMap(map)).toList();
     } on DatabaseException catch (e) {
+      debugPrint('[DataSource] getCampanasByDoctor error: $e');
       throw DataSourceException('Error al obtener campañas', originalError: e);
     }
   }
@@ -61,6 +65,7 @@ class LocalCampanaDataSource {
       final count = result.first['count'] as int;
       return count > 0;
     } on DatabaseException catch (e) {
+      debugPrint('[DataSource] checkDuplicate error: $e — empresa=$nombreEmpresa lugar=$lugar');
       throw DataSourceException('Error al verificar duplicado', originalError: e);
     }
   }
@@ -113,6 +118,20 @@ class LocalCampanaDataSource {
         'Error al obtener progreso de campaña',
         originalError: e,
       );
+    }
+  }
+
+  Future<void> insertEmpresa(Map<String, dynamic> empresaMap) async {
+    try {
+      final db = await _databaseHelper.database;
+      await db.insert(
+        AppConstants.tableEmpresas,
+        empresaMap,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } on DatabaseException catch (e) {
+      debugPrint('[DataSource] insertEmpresa error: $e — map: $empresaMap');
+      throw DataSourceException('Error al insertar empresa', originalError: e);
     }
   }
 

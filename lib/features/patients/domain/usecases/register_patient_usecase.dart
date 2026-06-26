@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/usecases/usecase.dart';
@@ -9,12 +10,10 @@ import '../repositories/i_historia_repository.dart';
 import '../repositories/i_patient_repository.dart';
 
 class RegisterPatientParams extends Equatable {
-  final String patientId;
   final String nombreCompleto;
   final String dependenciaId;
   final String doctorId;
   final bool esReconsulta;
-  final String historiaId;
   final String? campanaId;
   final String? diagnosticoTexto;
   final String? imagenUrl;
@@ -24,12 +23,10 @@ class RegisterPatientParams extends Equatable {
   final String? historiaAnteriorId;
 
   const RegisterPatientParams({
-    required this.patientId,
     required this.nombreCompleto,
     required this.dependenciaId,
     required this.doctorId,
     this.esReconsulta = false,
-    required this.historiaId,
     this.campanaId,
     this.diagnosticoTexto,
     this.imagenUrl,
@@ -39,10 +36,10 @@ class RegisterPatientParams extends Equatable {
     this.historiaAnteriorId,
   });
 
-  PatientEntity toPatientEntity() {
+  PatientEntity toPatientEntity(String id) {
     final now = DateTime.now();
     return PatientEntity(
-      id: patientId,
+      id: id,
       nombreCompleto: nombreCompleto,
       dependenciaId: dependenciaId,
       doctorId: doctorId,
@@ -52,10 +49,10 @@ class RegisterPatientParams extends Equatable {
     );
   }
 
-  HistoriaClinicaEntity toHistoriaEntity() {
+  HistoriaClinicaEntity toHistoriaEntity(String id, String pacienteId) {
     return HistoriaClinicaEntity(
-      id: historiaId,
-      pacienteId: patientId,
+      id: id,
+      pacienteId: pacienteId,
       campanaId: campanaId,
       diagnosticoTexto: diagnosticoTexto,
       imagenUrl: imagenUrl,
@@ -71,12 +68,10 @@ class RegisterPatientParams extends Equatable {
 
   @override
   List<Object?> get props => [
-        patientId,
         nombreCompleto,
         dependenciaId,
         doctorId,
         esReconsulta,
-        historiaId,
         campanaId,
         diagnosticoTexto,
         imagenUrl,
@@ -99,16 +94,19 @@ class RegisterPatientUseCase
 
   @override
   Future<Either<Failure, void>> call(RegisterPatientParams params) async {
+    final patientId = const Uuid().v4();
+    final historiaId = const Uuid().v4();
+
     final patientEither =
-        await patientRepository.savePatient(params.toPatientEntity());
+        await patientRepository.savePatient(params.toPatientEntity(patientId));
     final patientResult = patientEither.fold(
       (failure) => Left<Failure, void>(failure),
       (_) => null,
     );
     if (patientResult != null) return patientResult;
 
-    final historiaEither =
-        await historiaRepository.saveHistoria(params.toHistoriaEntity());
+    final historiaEither = await historiaRepository
+        .saveHistoria(params.toHistoriaEntity(historiaId, patientId));
     return historiaEither.fold(
       (failure) => Left<Failure, void>(failure),
       (_) => const Right<Failure, void>(null),

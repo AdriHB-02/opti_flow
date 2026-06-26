@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/usecases/assign_doctor_to_campana_usecase.dart';
@@ -41,7 +42,10 @@ class CampanaBloc extends Bloc<CampanaEvent, CampanaState> {
     emit(const CampanaLoading());
     final result = await _createCampanaUseCase(event.params);
     emit(result.fold(
-      (failure) => CampanaError(failure.message),
+      (failure) {
+        debugPrint('[BLoC] _onCreateCampana failure: ${failure.runtimeType} — ${failure.message}');
+        return CampanaError(failure.message);
+      },
       (campanaResult) {
         if (campanaResult.existeHistorialPrevio) {
           return HistorialPrevioDetectado(
@@ -65,7 +69,10 @@ class CampanaBloc extends Bloc<CampanaEvent, CampanaState> {
       ),
     );
     emit(result.fold(
-      (failure) => CampanaError(failure.message),
+      (failure) {
+        debugPrint('[BLoC] _onAssignDoctor failure: ${failure.runtimeType} — ${failure.message}');
+        return CampanaError(failure.message);
+      },
       (_) => const DoctorAssigned(),
     ));
   }
@@ -79,7 +86,10 @@ class CampanaBloc extends Bloc<CampanaEvent, CampanaState> {
       GetCampanaProgressParams(campanaId: event.campanaId),
     );
     emit(result.fold(
-      (failure) => CampanaError(failure.message),
+      (failure) {
+        debugPrint('[BLoC] _onLoadProgress failure: ${failure.runtimeType} — ${failure.message}');
+        return CampanaError(failure.message);
+      },
       (progress) => ProgressLoaded(progress: progress),
     ));
   }
@@ -91,7 +101,10 @@ class CampanaBloc extends Bloc<CampanaEvent, CampanaState> {
     emit(const CampanaLoading());
     final result = await _importPacientesReconsultaUseCase(event.params);
     emit(result.fold(
-      (failure) => CampanaError(failure.message),
+      (failure) {
+        debugPrint('[BLoC] _onImportReconsulta failure: ${failure.runtimeType} — ${failure.message}');
+        return CampanaError(failure.message);
+      },
       (_) => const ReconsultaImportada(),
     ));
   }
@@ -105,7 +118,10 @@ class CampanaBloc extends Bloc<CampanaEvent, CampanaState> {
       GetCampanasByDoctorParams(doctorId: event.doctorId),
     );
     emit(result.fold(
-      (failure) => CampanaError(failure.message),
+      (failure) {
+        debugPrint('[BLoC] _onLoadCampanas failure: ${failure.runtimeType} — ${failure.message}');
+        return CampanaError(failure.message);
+      },
       (campanas) => CampanasLoaded(campanas: campanas),
     ));
   }

@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/data_source_exception.dart';
 import '../../../../core/errors/failures.dart';
@@ -23,8 +24,9 @@ class CampanaRepository implements ICampanaRepository {
       final dto = CampanaDTO.fromEntity(campana);
       await _localDataSource.insertCampana(dto);
       return Right(campana);
-    } on DataSourceException {
-      return Left(CacheFailure('Error al crear campaña'));
+    } on DataSourceException catch (e) {
+      debugPrint('[Repo] createCampana error: $e — original: ${e.originalError}');
+      return Left(CacheFailure('Error al crear campaña: $e'));
     }
   }
 
@@ -36,7 +38,8 @@ class CampanaRepository implements ICampanaRepository {
       final dtos = await _localDataSource.getCampanasByDoctor(doctorId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
-    } on DataSourceException {
+    } on DataSourceException catch (e) {
+      debugPrint('[Repo] getCampanasByDoctor error: $e — original: ${e.originalError}');
       return Left(CacheFailure('Error al obtener campañas'));
     }
   }
@@ -52,7 +55,8 @@ class CampanaRepository implements ICampanaRepository {
         lugar,
       );
       return Right(exists);
-    } on DataSourceException {
+    } on DataSourceException catch (e) {
+      debugPrint('[Repo] checkHistorialPrevio error: $e — original: ${e.originalError}');
       return Left(CacheFailure('Error al verificar historial previo'));
     }
   }
@@ -65,7 +69,8 @@ class CampanaRepository implements ICampanaRepository {
     try {
       await _localDataSource.assignDoctor(campanaId, doctorId);
       return const Right(null);
-    } on DataSourceException {
+    } on DataSourceException catch (e) {
+      debugPrint('[Repo] assignDoctor error: $e — original: ${e.originalError}');
       return Left(CacheFailure('Error al asignar doctor a campaña'));
     }
   }
@@ -78,7 +83,8 @@ class CampanaRepository implements ICampanaRepository {
       final dtos = await _localDataSource.getCampanaProgress(campanaId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
-    } on DataSourceException {
+    } on DataSourceException catch (e) {
+      debugPrint('[Repo] getCampanaProgress error: $e — original: ${e.originalError}');
       return Left(CacheFailure('Error al obtener progreso de campaña'));
     }
   }
@@ -91,8 +97,20 @@ class CampanaRepository implements ICampanaRepository {
       final dtos = await _localDataSource.getAvailableDoctors(campanaId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
-    } on DataSourceException {
+    } on DataSourceException catch (e) {
+      debugPrint('[Repo] getAvailableDoctors error: $e — original: ${e.originalError}');
       return Left(CacheFailure('Error al obtener doctores disponibles'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> createEmpresa(Map<String, dynamic> empresaMap) async {
+    try {
+      await _localDataSource.insertEmpresa(empresaMap);
+      return const Right(null);
+    } on DataSourceException catch (e) {
+      debugPrint('[Repo] createEmpresa error: $e — original: ${e.originalError}');
+      return Left(CacheFailure('Error al crear empresa'));
     }
   }
 }

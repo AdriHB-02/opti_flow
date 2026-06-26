@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/session_manager.dart';
@@ -21,7 +20,6 @@ class NewCampanaScreen extends StatefulWidget {
 
 class _NewCampanaScreenState extends State<NewCampanaScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _uuid = const Uuid();
 
   final _empresaIdController = TextEditingController();
   final _nombreEmpresaController = TextEditingController();
@@ -80,8 +78,6 @@ class _NewCampanaScreenState extends State<NewCampanaScreen> {
     }
 
     final params = CreateCampanaParams(
-      id: _uuid.v4(),
-      empresaId: _empresaIdController.text.trim(),
       nombreEmpresa: _nombreEmpresaController.text.trim(),
       lugar: _lugarController.text.trim(),
       fechaInicio: _fechaInicio,
@@ -115,8 +111,6 @@ class _NewCampanaScreenState extends State<NewCampanaScreen> {
     }
 
     final params = CreateCampanaParams(
-      id: _uuid.v4(),
-      empresaId: _empresaIdController.text.trim(),
       nombreEmpresa: _nombreEmpresaController.text.trim(),
       lugar: _lugarController.text.trim(),
       fechaInicio: _fechaInicio,
@@ -164,17 +158,17 @@ class _NewCampanaScreenState extends State<NewCampanaScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextFormField(
-                    controller: _empresaIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'ID de Empresa',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLength: 50,
-                    validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Requerido' : null,
-                  ),
-                  const SizedBox(height: 16),
+                  // TextFormField(
+                  //   controller: _empresaIdController,
+                  //   decoration: const InputDecoration(
+                  //     labelText: 'ID de Empresa',
+                  //     border: OutlineInputBorder(),
+                  //   ),
+                  //   maxLength: 50,
+                  //   validator: (v) =>
+                  //       v == null || v.trim().isEmpty ? 'Requerido' : null,
+                  // ),
+                  // const SizedBox(height: 16),
                   TextFormField(
                     controller: _nombreEmpresaController,
                     decoration: const InputDecoration(

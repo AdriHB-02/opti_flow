@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../../core/utils/session_manager.dart';
 import '../../domain/entities/dependencia_entity.dart';
@@ -23,7 +22,6 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _diagnosticoController = TextEditingController();
-  final _uuid = const Uuid();
 
   final GetDependenciasUseCase _getDependencias =
       GetIt.instance<GetDependenciasUseCase>();
@@ -78,11 +76,9 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
     }
 
     final params = RegisterPatientParams(
-      patientId: _uuid.v4(),
       nombreCompleto: _nameController.text.trim(),
       dependenciaId: _selectedDependencia!.id,
       doctorId: _doctorId ?? '',
-      historiaId: _uuid.v4(),
       diagnosticoTexto: _diagnosticoController.text.trim(),
       fechaAtencion: DateTime.now(),
     );

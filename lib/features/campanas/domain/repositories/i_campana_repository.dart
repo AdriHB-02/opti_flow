@@ -26,4 +26,6 @@ abstract class ICampanaRepository {
   Future<Either<Failure, List<UserEntity>>> getAvailableDoctors(
     String campanaId,
   );
+
+  Future<Either<Failure, void>> createEmpresa(Map<String, dynamic> empresaMap);
 }
