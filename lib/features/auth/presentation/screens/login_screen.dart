@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
-
+import 'package:opti_flow/core/constants/app_constants.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/session_manager.dart';
 import '../../domain/entities/user_entity.dart';
@@ -116,9 +116,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.visibility,
-                          size: 80, color: Theme.of(context).colorScheme.primary),
-                      const SizedBox(height: 16),
+                      Image.network(
+                        AppConstants.loginLogoUrl,
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Icon(Icons.image, size: 80, color: Theme.of(context).colorScheme.primary),
+                      ),
                       Text('OptiFlow',
                           style: Theme.of(context).textTheme.headlineMedium),
                       const SizedBox(height: 32),

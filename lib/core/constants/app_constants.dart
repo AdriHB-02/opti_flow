@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
   AppConstants._();
-
+  
   // ── SQLite table names ──
   static const String tableDoctores = 'doctores';
   static const String tableEmpresas = 'empresas';
@@ -19,6 +19,7 @@ class AppConstants {
   static const String dbName = 'optiflow_local.db';
   static const int dbVersion = 3;
 
+  static final loginLogoUrl = dotenv.get('LOGIN_LOGO_URL', fallback: 'https://your-project.supabase.co/storage/v1/object/public/logos/your-logo.png');
   static final supabaseUrl = dotenv.get('SUPABASE_URL', fallback: 'https://your-project.supabase.co/rest/v1');
   static final supabaseAnonKey = dotenv.get('SUPABASE_ANON_KEY', fallback: 'your-anon-key');
 
