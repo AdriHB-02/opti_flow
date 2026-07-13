@@ -22,6 +22,10 @@ class AppConstants {
   static final supabaseUrl = dotenv.get('SUPABASE_URL', fallback: 'https://your-project.supabase.co/rest/v1');
   static final supabaseAnonKey = dotenv.get('SUPABASE_ANON_KEY', fallback: 'your-anon-key');
 
+  // ── Google OAuth 2.0 ──
+  static final googleWebClientId = dotenv.get('GOOGLE_WEB_CLIENT_ID', fallback: '');
+  static final googleIosClientId = dotenv.get('GOOGLE_IOS_CLIENT_ID', fallback: '');
+
   // ── AWS S3 (placeholder) ──
   static const String awsBucket = String.fromEnvironment(
     'AWS_BUCKET',

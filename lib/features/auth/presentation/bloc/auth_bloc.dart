@@ -5,6 +5,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/biometric_login_usecase.dart';
+import '../../domain/usecases/google_sign_in_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import 'auth_event.dart';
@@ -14,18 +15,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase _loginUseCase;
   final LogoutUseCase _logoutUseCase;
   final BiometricLoginUseCase _biometricLoginUseCase;
+  final GoogleSignInUseCase _googleSignInUseCase;
 
   AuthBloc({
     required LoginUseCase loginUseCase,
     required LogoutUseCase logoutUseCase,
     required BiometricLoginUseCase biometricLoginUseCase,
+    required GoogleSignInUseCase googleSignInUseCase,
   })  : _loginUseCase = loginUseCase,
         _logoutUseCase = logoutUseCase,
         _biometricLoginUseCase = biometricLoginUseCase,
+        _googleSignInUseCase = googleSignInUseCase,
         super(const AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
     on<LogoutRequested>(_onLogoutRequested);
     on<BiometricLoginRequested>(_onBiometricLoginRequested);
+    on<GoogleSignInRequested>(_onGoogleSignInRequested);
   }
 
   Future<void> _onLoginRequested(
@@ -57,6 +62,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     final result = await _biometricLoginUseCase(const NoParams());
+    emit(_resultToState(result));
+  }
+
+  Future<void> _onGoogleSignInRequested(
+    GoogleSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _googleSignInUseCase(const NoParams());
     emit(_resultToState(result));
   }
 
