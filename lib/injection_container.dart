@@ -37,6 +37,10 @@ import 'features/campanas/domain/usecases/get_campanas_by_doctor_usecase.dart';
 import 'features/campanas/domain/usecases/import_pacientes_reconsulta_usecase.dart';
 import 'features/campanas/presentation/bloc/campana_bloc.dart';
 
+import 'features/admin/domain/usecases/get_all_doctors_usecase.dart';
+import 'features/admin/domain/usecases/delete_doctor_account_usecase.dart';
+import 'features/admin/domain/usecases/get_global_stats_usecase.dart';
+
 import 'core/database/database_helper.dart';
 
 final sl = GetIt.instance;
@@ -132,6 +136,17 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<GetCampanasByDoctorUseCase>(
     () => GetCampanasByDoctorUseCase(sl()),
+  );
+
+  // ── Admin Use Cases ──
+  sl.registerLazySingleton<GetAllDoctorsUseCase>(
+    () => GetAllDoctorsUseCase(sl()),
+  );
+  sl.registerLazySingleton<DeleteDoctorAccountUseCase>(
+    () => DeleteDoctorAccountUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetGlobalStatsUseCase>(
+    () => GetGlobalStatsUseCase(sl()),
   );
 
   // ── BLoCs ──
