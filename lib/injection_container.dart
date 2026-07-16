@@ -38,6 +38,12 @@ import 'features/campanas/domain/usecases/get_campanas_by_doctor_usecase.dart';
 import 'features/campanas/domain/usecases/import_pacientes_reconsulta_usecase.dart';
 import 'features/campanas/presentation/bloc/campana_bloc.dart';
 
+import 'features/admin/domain/usecases/get_all_doctors_usecase.dart';
+import 'features/admin/domain/usecases/delete_doctor_account_usecase.dart';
+import 'features/admin/domain/usecases/get_global_stats_usecase.dart';
+import 'features/admin/domain/usecases/get_patients_by_month_usecase.dart';
+import 'features/admin/presentation/bloc/admin_bloc.dart';
+
 import 'core/database/database_helper.dart';
 
 final sl = GetIt.instance;
@@ -136,7 +142,30 @@ Future<void> init() async {
     () => GetCampanasByDoctorUseCase(sl()),
   );
 
+  // ── Admin Use Cases ──
+  sl.registerLazySingleton<GetAllDoctorsUseCase>(
+    () => GetAllDoctorsUseCase(sl()),
+  );
+  sl.registerLazySingleton<DeleteDoctorAccountUseCase>(
+    () => DeleteDoctorAccountUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetGlobalStatsUseCase>(
+    () => GetGlobalStatsUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetPatientsByMonthUseCase>(
+    () => GetPatientsByMonthUseCase(sl()),
+  );
+
   // ── BLoCs ──
+  sl.registerFactory<AdminBloc>(
+    () => AdminBloc(
+      getAllDoctorsUseCase: sl(),
+      deleteDoctorAccountUseCase: sl(),
+      getGlobalStatsUseCase: sl(),
+      getPatientsByMonthUseCase: sl(),
+    ),
+  );
+
   sl.registerFactory<AuthBloc>(
     () => AuthBloc(
       loginUseCase: sl(),

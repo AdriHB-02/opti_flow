@@ -31,4 +31,14 @@ class SessionManager {
   static Future<void> clear() async {
     await _storage.delete(key: _key);
   }
+
+  static Future<bool> isAdmin() async {
+    final session = await load();
+    return session?['rol'] == 'ADMIN';
+  }
+
+  static Future<String?> currentUserId() async {
+    final session = await load();
+    return session?['id'] as String?;
+  }
 }
