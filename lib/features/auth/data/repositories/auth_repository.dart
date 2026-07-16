@@ -77,6 +77,17 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
+  Future<Either<Failure, List<Map<String, dynamic>>>> getPacientesPorMes() async {
+    try {
+      final data = await _remoteDataSource.getPacientesPorMes();
+      return Right(data);
+    } catch (e) {
+      debugPrint('[AuthRepo] getPacientesPorMes error: $e');
+      return Left(ServerFailure('Error al obtener pacientes por mes: $e'));
+    }
+  }
+
+  @override
   Future<Either<Failure, Map<String, int>>> getGlobalStats() async {
     try {
       final stats = await _remoteDataSource.getGlobalStats();

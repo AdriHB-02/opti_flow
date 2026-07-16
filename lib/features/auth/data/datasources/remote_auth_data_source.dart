@@ -127,6 +127,35 @@ class RemoteAuthDataSource {
     await _client.auth.admin.deleteUser(doctorId);
   }
 
+  Future<List<Map<String, dynamic>>> getPacientesPorMes() async {
+    final response = await _client
+        .from(AppConstants.tablePacientes)
+        .select('created_at');
+
+    final now = DateTime.now();
+    final Map<String, int> counts = {};
+
+    for (int i = 5; i >= 0; i--) {
+      final month = DateTime(now.year, now.month - i, 1);
+      final key =
+          '${month.year}-${month.month.toString().padLeft(2, '0')}';
+      counts[key] = 0;
+    }
+
+    for (final row in response) {
+      final fecha = DateTime.parse(row['created_at'] as String);
+      final key =
+          '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}';
+      if (counts.containsKey(key)) {
+        counts[key] = counts[key]! + 1;
+      }
+    }
+
+    return counts.entries
+        .map((e) => {'mes': e.key, 'cantidad': e.value})
+        .toList();
+  }
+
   Future<Map<String, int>> getGlobalStats() async {
     final campanasResponse = await _client
         .from(AppConstants.tableCampanas)

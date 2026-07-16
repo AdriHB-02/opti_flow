@@ -19,4 +19,6 @@ abstract class IAuthRepository {
   Future<Either<Failure, void>> deleteDoctorAccount(String doctorId);
 
   Future<Either<Failure, Map<String, int>>> getGlobalStats();
+
+  Future<Either<Failure, List<Map<String, dynamic>>>> getPacientesPorMes();
 }

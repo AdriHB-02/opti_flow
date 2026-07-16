@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/admin/presentation/bloc/admin_bloc.dart';
+import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/campanas/presentation/bloc/campana_bloc.dart';
@@ -13,7 +15,6 @@ import '../../features/patients/presentation/screens/patient_detail_screen.dart'
 import '../../features/patients/presentation/screens/patient_list_screen.dart';
 import '../../features/patients/presentation/screens/user_dashboard_screen.dart';
 import '../../injection_container.dart' as di;
-import 'widgets/dashboard_scaffold.dart';
 
 class AppRouter {
   static const String login = '/login';
@@ -44,8 +45,9 @@ class AppRouter {
       GoRoute(
         path: adminDashboard,
         name: 'adminDashboard',
-        builder: (context, state) => const DashboardScaffold(
-          title: 'OptiFlow - Admin Dashboard',
+        builder: (context, state) => BlocProvider<AdminBloc>(
+          create: (_) => di.sl<AdminBloc>(),
+          child: const AdminDashboardScreen(),
         ),
       ),
       GoRoute(
