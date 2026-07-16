@@ -30,6 +30,16 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
+  Future<UserEntity> loginWithGoogle() async {
+    final data = await _remoteDataSource.loginWithGoogle();
+    try {
+      return UserFactory.fromMap(data);
+    } catch (e) {
+      throw Exception('Error al procesar datos de usuario de Google: $e');
+    }
+  }
+
+  @override
   Future<void> logout() async {
     await _remoteDataSource.logout();
   }

@@ -5,6 +5,7 @@ import 'features/auth/data/datasources/remote_auth_data_source.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/auth/domain/repositories/i_auth_repository.dart';
 import 'features/auth/domain/usecases/biometric_login_usecase.dart';
+import 'features/auth/domain/usecases/google_sign_in_usecase.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/domain/usecases/logout_usecase.dart';
 import 'features/auth/domain/usecases/recuperar_password_usecase.dart';
@@ -87,6 +88,7 @@ Future<void> init() async {
   sl.registerLazySingleton<LoginUseCase>(() => LoginUseCase(sl()));
   sl.registerLazySingleton<LogoutUseCase>(() => LogoutUseCase(sl()));
   sl.registerLazySingleton<BiometricLoginUseCase>(() => BiometricLoginUseCase(sl()));
+  sl.registerLazySingleton<GoogleSignInUseCase>(() => GoogleSignInUseCase(sl()));
   sl.registerLazySingleton<RecuperarPasswordUseCase>(
     () => RecuperarPasswordUseCase(sl()),
   );
@@ -140,6 +142,7 @@ Future<void> init() async {
       loginUseCase: sl(),
       logoutUseCase: sl(),
       biometricLoginUseCase: sl(),
+      googleSignInUseCase: sl(),
     ),
   );
 

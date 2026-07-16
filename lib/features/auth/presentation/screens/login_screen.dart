@@ -61,6 +61,10 @@ class _LoginScreenState extends State<LoginScreen> {
     context.read<AuthBloc>().add(const BiometricLoginRequested());
   }
 
+  void _onGoogleSignIn() {
+    context.read<AuthBloc>().add(const GoogleSignInRequested());
+  }
+
   void _navigateByRole(UserRole role) {
     switch (role) {
       case UserRole.admin:
@@ -121,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 120,
                         height: 120,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Icon(Icons.image, size: 80, color: Theme.of(context).colorScheme.primary),
+                        errorBuilder: (_, _, _) => Icon(Icons.image, size: 80, color: Theme.of(context).colorScheme.primary),
                       ),
                       Text('OptiFlow',
                           style: Theme.of(context).textTheme.headlineMedium),
@@ -185,6 +189,31 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ],
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'o continúa con',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: OutlinedButton.icon(
+                          onPressed:
+                              state is AuthLoading ? null : _onGoogleSignIn,
+                          icon: const Icon(Icons.g_mobiledata, size: 24),
+                          label: const Text('Continuar con Google'),
+                        ),
+                      ),
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () => context.push(AppRouter.forgotPassword),

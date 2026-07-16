@@ -24,3 +24,7 @@ class LogoutRequested extends AuthEvent {
 class BiometricLoginRequested extends AuthEvent {
   const BiometricLoginRequested();
 }
+
+class GoogleSignInRequested extends AuthEvent {
+  const GoogleSignInRequested();
+}
