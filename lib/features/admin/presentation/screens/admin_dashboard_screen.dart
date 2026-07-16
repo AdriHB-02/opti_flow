@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../auth/domain/entities/doctor_user.dart';
 import '../../../auth/domain/entities/user_entity.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
 import '../bloc/admin_bloc.dart';
 import '../bloc/admin_event.dart';
 import '../bloc/admin_state.dart';
@@ -34,7 +36,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
-              Navigator.of(context).pop();
+              context.read<AuthBloc>().add(const LogoutRequested());
             },
           ),
         ],
@@ -83,7 +85,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildDoctorsSection(AdminState state) {
-    if (state is AdminLoading) {
+    final ready = state is AdminReady ? state : null;
+
+    if (ready != null && ready.doctorsLoading) {
       return const Card(
         child: Padding(
           padding: EdgeInsets.all(24),
@@ -92,13 +96,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       );
     }
 
-    if (state is AdminError) {
+    if (ready != null && ready.doctorsError != null) {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Center(
             child: Text(
-              state.message,
+              ready.doctorsError!,
               style: const TextStyle(color: Colors.red),
             ),
           ),
@@ -106,13 +110,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       );
     }
 
-    int doctorCount = 0;
-    List<UserEntity> recentDoctors = [];
-
-    if (state is DoctorsLoaded) {
-      doctorCount = state.doctors.length;
-      recentDoctors = state.doctors.take(3).toList();
-    }
+    final doctors = ready?.doctors ?? [];
+    final recentDoctors = doctors.take(3).toList();
 
     return Card(
       elevation: 2,
@@ -126,7 +125,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 const Icon(Icons.people, color: Colors.blue, size: 32),
                 const SizedBox(width: 12),
                 Text(
-                  '$doctorCount doctores registrados',
+                  '${doctors.length} doctores registrados',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -182,18 +181,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildCompaniesSection(AdminState state) {
-    List<String> empresas = [];
+    final ready = state is AdminReady ? state : null;
+    final doctors = ready?.doctors ?? [];
 
-    if (state is DoctorsLoaded) {
-      final Set<String> seen = {};
-      for (final doctor in state.doctors) {
-        // Empresas are extracted from doctor context; in a real scenario
-        // they'd come from a dedicated endpoint. For now we show the count.
-        if (doctor is DoctorUser && doctor.dependenciaLocalId.isNotEmpty) {
-          final empresaName = doctor.dependenciaLocalId;
-          if (seen.add(empresaName)) {
-            empresas.add(empresaName);
-          }
+    List<String> empresas = [];
+    final Set<String> seen = {};
+    for (final doctor in doctors) {
+      if (doctor is DoctorUser && doctor.dependenciaLocalId.isNotEmpty) {
+        final empresaName = doctor.dependenciaLocalId;
+        if (seen.add(empresaName)) {
+          empresas.add(empresaName);
         }
       }
     }
@@ -246,7 +243,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildStatsSection(AdminState state) {
-    if (state is StatsLoaded) {
+    final ready = state is AdminReady ? state : null;
+
+    if (ready != null && ready.statsLoading) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    if (ready?.stats != null) {
+      final stats = ready!.stats!;
       return Card(
         elevation: 2,
         child: Padding(
@@ -257,19 +266,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 children: [
                   _buildStatItem(
                     Icons.campaign,
-                    '${state.stats.totalCampanasActivas}',
+                    '${stats.totalCampanasActivas}',
                     'Campañas',
                     Colors.orange,
                   ),
                   _buildStatItem(
                     Icons.people,
-                    '${state.stats.totalPacientes}',
+                    '${stats.totalPacientes}',
                     'Pacientes',
                     Colors.blue,
                   ),
                   _buildStatItem(
                     Icons.medical_services,
-                    '${state.stats.totalDoctoresActivos}',
+                    '${stats.totalDoctoresActivos}',
                     'Doctores\nActivos',
                     Colors.green,
                   ),
@@ -295,15 +304,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ],
           ),
-        ),
-      );
-    }
-
-    if (state is AdminLoading) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Center(child: CircularProgressIndicator()),
         ),
       );
     }

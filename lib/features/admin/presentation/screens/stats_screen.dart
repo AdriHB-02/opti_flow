@@ -66,7 +66,9 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget _buildStatCards() {
     return BlocBuilder<AdminBloc, AdminState>(
       builder: (context, state) {
-        if (state is AdminLoading) {
+        final ready = state is AdminReady ? state : null;
+
+        if (ready != null && ready.statsLoading) {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(32),
@@ -75,7 +77,8 @@ class _StatsScreenState extends State<StatsScreen> {
           );
         }
 
-        if (state is StatsLoaded) {
+        if (ready?.stats != null) {
+          final stats = ready!.stats!;
           return Column(
             children: [
               Row(
@@ -84,7 +87,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     child: _buildStatCard(
                       icon: Icons.campaign,
                       title: 'Campañas\nActivas',
-                      value: '${state.stats.totalCampanasActivas}',
+                      value: '${stats.totalCampanasActivas}',
                       color: Colors.orange,
                     ),
                   ),
@@ -93,7 +96,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     child: _buildStatCard(
                       icon: Icons.people,
                       title: 'Total\nPacientes',
-                      value: '${state.stats.totalPacientes}',
+                      value: '${stats.totalPacientes}',
                       color: Colors.blue,
                     ),
                   ),
@@ -106,7 +109,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     child: _buildStatCard(
                       icon: Icons.medical_services,
                       title: 'Doctores\nActivos',
-                      value: '${state.stats.totalDoctoresActivos}',
+                      value: '${stats.totalDoctoresActivos}',
                       color: Colors.green,
                     ),
                   ),
@@ -202,7 +205,9 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget _buildChartSection() {
     return BlocBuilder<AdminBloc, AdminState>(
       builder: (context, state) {
-        if (state is AdminLoading) {
+        final ready = state is AdminReady ? state : null;
+
+        if (ready != null && ready.patientsLoading) {
           return const Card(
             child: Padding(
               padding: EdgeInsets.all(32),
@@ -211,8 +216,8 @@ class _StatsScreenState extends State<StatsScreen> {
           );
         }
 
-        if (state is PatientsByMonthLoaded) {
-          return PatientsBarChart(data: state.data);
+        if (ready?.patientsByMonth != null) {
+          return PatientsBarChart(data: ready!.patientsByMonth!);
         }
 
         return const Card(

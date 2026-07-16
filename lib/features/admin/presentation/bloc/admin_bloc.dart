@@ -35,19 +35,32 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<DeleteDoctor>(_onDeleteDoctor);
   }
 
+  AdminReady _ensureReady(AdminState state) {
+    if (state is AdminReady) return state;
+    return const AdminReady();
+  }
+
   Future<void> _onLoadDoctors(
     LoadDoctors event,
     Emitter<AdminState> emit,
   ) async {
     _currentFilters = event.filters;
-    emit(const AdminLoading());
+    final current = _ensureReady(state);
+    emit(current.copyWith(doctorsLoading: true, clearDoctorsError: true));
     final result = await _getAllDoctorsUseCase(event.filters);
+    final current2 = _ensureReady(state);
     emit(result.fold(
       (failure) {
         debugPrint('[AdminBloc] _onLoadDoctors failure: ${failure.message}');
-        return AdminError(failure.message);
+        return current2.copyWith(
+          doctorsLoading: false,
+          doctorsError: failure.message,
+        );
       },
-      (doctors) => DoctorsLoaded(doctors: doctors),
+      (doctors) => current2.copyWith(
+        doctorsLoading: false,
+        doctors: doctors,
+      ),
     ));
   }
 
@@ -56,14 +69,22 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     Emitter<AdminState> emit,
   ) async {
     _currentFilters = event.filters;
-    emit(const AdminLoading());
+    final current = _ensureReady(state);
+    emit(current.copyWith(doctorsLoading: true, clearDoctorsError: true));
     final result = await _getAllDoctorsUseCase(event.filters);
+    final current2 = _ensureReady(state);
     emit(result.fold(
       (failure) {
         debugPrint('[AdminBloc] _onUpdateDoctorFilters failure: ${failure.message}');
-        return AdminError(failure.message);
+        return current2.copyWith(
+          doctorsLoading: false,
+          doctorsError: failure.message,
+        );
       },
-      (doctors) => DoctorsLoaded(doctors: doctors),
+      (doctors) => current2.copyWith(
+        doctorsLoading: false,
+        doctors: doctors,
+      ),
     ));
   }
 
@@ -71,14 +92,22 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     LoadStats event,
     Emitter<AdminState> emit,
   ) async {
-    emit(const AdminLoading());
+    final current = _ensureReady(state);
+    emit(current.copyWith(statsLoading: true, clearStatsError: true));
     final result = await _getGlobalStatsUseCase(const NoParams());
+    final current2 = _ensureReady(state);
     emit(result.fold(
       (failure) {
         debugPrint('[AdminBloc] _onLoadStats failure: ${failure.message}');
-        return AdminError(failure.message);
+        return current2.copyWith(
+          statsLoading: false,
+          statsError: failure.message,
+        );
       },
-      (stats) => StatsLoaded(stats: stats),
+      (stats) => current2.copyWith(
+        statsLoading: false,
+        stats: stats,
+      ),
     ));
   }
 
@@ -86,14 +115,22 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     LoadPatientsByMonth event,
     Emitter<AdminState> emit,
   ) async {
-    emit(const AdminLoading());
+    final current = _ensureReady(state);
+    emit(current.copyWith(patientsLoading: true, clearPatientsError: true));
     final result = await _getPatientsByMonthUseCase(const NoParams());
+    final current2 = _ensureReady(state);
     emit(result.fold(
       (failure) {
         debugPrint('[AdminBloc] _onLoadPatientsByMonth failure: ${failure.message}');
-        return AdminError(failure.message);
+        return current2.copyWith(
+          patientsLoading: false,
+          patientsError: failure.message,
+        );
       },
-      (data) => PatientsByMonthLoaded(data: data),
+      (data) => current2.copyWith(
+        patientsLoading: false,
+        patientsByMonth: data,
+      ),
     ));
   }
 
@@ -101,19 +138,17 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     DeleteDoctor event,
     Emitter<AdminState> emit,
   ) async {
-    emit(const AdminLoading());
     final result = await _deleteDoctorAccountUseCase(
-      DeleteDoctorAccountParams(doctorId: event.doctorId),
+      DeleteDoctorAccountParams(
+        doctorId: event.doctorId,
+        currentUserId: event.currentUserId,
+      ),
     );
+    final current = _ensureReady(state);
     emit(result.fold(
-      (failure) {
-        debugPrint('[AdminBloc] _onDeleteDoctor failure: ${failure.message}');
-        return AdminError(failure.message);
-      },
-      (_) {
-        add(LoadDoctors(filters: _currentFilters));
-        return const DoctorDeleted();
-      },
+      (failure) => current.copyWith(doctorsError: failure.message),
+      (_) => current.copyWith(deleteSuccess: true),
     ));
+    add(LoadDoctors(filters: _currentFilters));
   }
 }

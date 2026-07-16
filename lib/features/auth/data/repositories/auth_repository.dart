@@ -61,7 +61,7 @@ class AuthRepository implements IAuthRepository {
       return Right(doctors);
     } catch (e) {
       debugPrint('[AuthRepo] getAllDoctors error: $e');
-      return Left(ServerFailure('Error al obtener doctores: $e'));
+      return const Left(ServerFailure('Error al obtener el listado de doctores'));
     }
   }
 
@@ -72,7 +72,7 @@ class AuthRepository implements IAuthRepository {
       return const Right(null);
     } catch (e) {
       debugPrint('[AuthRepo] deleteDoctorAccount error: $e');
-      return Left(ServerFailure('Error al eliminar cuenta del doctor: $e'));
+      return const Left(ServerFailure('Error al eliminar la cuenta del doctor'));
     }
   }
 
@@ -83,7 +83,7 @@ class AuthRepository implements IAuthRepository {
       return Right(data);
     } catch (e) {
       debugPrint('[AuthRepo] getPacientesPorMes error: $e');
-      return Left(ServerFailure('Error al obtener pacientes por mes: $e'));
+      return const Left(ServerFailure('Error al obtener estadísticas de pacientes'));
     }
   }
 
@@ -94,7 +94,7 @@ class AuthRepository implements IAuthRepository {
       return Right(stats);
     } catch (e) {
       debugPrint('[AuthRepo] getGlobalStats error: $e');
-      return Left(ServerFailure('Error al obtener estadísticas: $e'));
+      return const Left(ServerFailure('Error al obtener las estadísticas globales'));
     }
   }
 }

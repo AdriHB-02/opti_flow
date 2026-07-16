@@ -37,9 +37,13 @@ class LoadPatientsByMonth extends AdminEvent {
 
 class DeleteDoctor extends AdminEvent {
   final String doctorId;
+  final String currentUserId;
 
-  const DeleteDoctor({required this.doctorId});
+  const DeleteDoctor({
+    required this.doctorId,
+    required this.currentUserId,
+  });
 
   @override
-  List<Object?> get props => [doctorId];
+  List<Object?> get props => [doctorId, currentUserId];
 }

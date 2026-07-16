@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../auth/domain/entities/user_entity.dart';
+import '../../../../core/utils/session_manager.dart';
 import '../../domain/entities/doctor_filters.dart';
 import '../bloc/admin_bloc.dart';
 import '../bloc/admin_event.dart';
@@ -48,8 +49,13 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
           _buildFilterBar(),
           Expanded(
             child: BlocConsumer<AdminBloc, AdminState>(
+              listenWhen: (prev, curr) {
+                if (prev is! AdminReady || curr is! AdminReady) return false;
+                return curr.deleteSuccess && !prev.deleteSuccess;
+              },
               listener: (context, state) {
-                if (state is DoctorDeleted) {
+                final ready = state as AdminReady;
+                if (ready.deleteSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Doctor eliminado correctamente'),
@@ -57,27 +63,21 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                     ),
                   );
                 }
-                if (state is AdminError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
               },
               builder: (context, state) {
-                if (state is AdminLoading) {
+                final ready = state is AdminReady ? state : null;
+
+                if (ready != null && ready.doctorsLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (state is AdminError) {
+                if (ready != null && ready.doctorsError != null) {
                   return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          state.message,
+                          ready.doctorsError!,
                           style: const TextStyle(color: Colors.red),
                         ),
                         const SizedBox(height: 16),
@@ -90,16 +90,13 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                   );
                 }
 
-                if (state is DoctorsLoaded) {
-                  if (state.doctors.isEmpty) {
-                    return const Center(
-                      child: Text('No se encontraron doctores'),
-                    );
-                  }
-                  return _buildDoctorList(state.doctors);
+                final doctors = ready?.doctors ?? [];
+                if (doctors.isEmpty) {
+                  return const Center(
+                    child: Text('No se encontraron doctores'),
+                  );
                 }
-
-                return const Center(child: Text('Deslice para cargar'));
+                return _buildDoctorList(doctors);
               },
             ),
           ),
@@ -234,40 +231,73 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
   }
 
   Widget _buildDoctorTile(UserEntity doctor) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: _roleColor(doctor.rol).withValues(alpha: 0.2),
-          child: Icon(
-            Icons.person,
-            color: _roleColor(doctor.rol),
+    return FutureBuilder<String?>(
+      future: SessionManager.currentUserId(),
+      builder: (context, snapshot) {
+        final currentUserId = snapshot.data;
+        final isSelf = currentUserId == doctor.id;
+
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: _roleColor(doctor.rol).withValues(alpha: 0.2),
+              child: Icon(
+                Icons.person,
+                color: _roleColor(doctor.rol),
+              ),
+            ),
+            title: Text(
+              doctor.nombre,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              '${_roleLabel(doctor.rol)} · ${doctor.email}',
+              style: const TextStyle(fontSize: 13),
+            ),
+            trailing: isSelf
+                ? const Tooltip(
+                    message: 'No puedes eliminar tu propia cuenta',
+                    child: Icon(Icons.lock_outline, color: Colors.grey),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: () => _showDeleteDialog(doctor),
+                  ),
           ),
-        ),
-        title: Text(
-          doctor.nombre,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          '${_roleLabel(doctor.rol)} · ${doctor.email}',
-          style: const TextStyle(fontSize: 13),
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.red),
-          onPressed: () => _showDeleteDialog(doctor),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Future<void> _showDeleteDialog(UserEntity doctor) async {
+    final currentUserId = await SessionManager.currentUserId();
+    if (currentUserId == null || !mounted) return;
+
+    if (currentUserId == doctor.id) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No puedes eliminar tu propia cuenta'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => DeleteAccountDialog(doctorName: doctor.nombre),
     );
 
     if (confirmed == true && mounted) {
-      context.read<AdminBloc>().add(DeleteDoctor(doctorId: doctor.id));
+      context.read<AdminBloc>().add(
+            DeleteDoctor(
+              doctorId: doctor.id,
+              currentUserId: currentUserId,
+            ),
+          );
     }
   }
 

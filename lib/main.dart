@@ -6,6 +6,7 @@ import 'core/constants/app_constants.dart';
 import 'core/database/database_config.dart';
 import 'core/router/app_router.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/bloc/auth_state.dart' as auth;
 import 'injection_container.dart' as di;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -31,12 +32,19 @@ class OptiFlowApp extends StatelessWidget {
       providers: [
         BlocProvider<AuthBloc>(create: (_) => di.sl<AuthBloc>()),
       ],
-      child: MaterialApp.router(
-        title: 'OptiFlow',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+      child: BlocListener<AuthBloc, auth.AuthState>(
+        listener: (context, state) {
+          if (state is auth.AuthInitial) {
+            AppRouter.router.go(AppRouter.login);
+          }
+        },
+        child: MaterialApp.router(
+          title: 'OptiFlow',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+          ),
+          routerConfig: AppRouter.router,
         ),
-        routerConfig: AppRouter.router,
       ),
     );
   }

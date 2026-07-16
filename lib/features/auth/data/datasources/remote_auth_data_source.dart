@@ -105,12 +105,12 @@ class RemoteAuthDataSource {
         .eq('doctor_id', doctorId);
 
     await _client
-        .from(AppConstants.tablePacientes)
+        .from(AppConstants.tableHistoriasClinicas)
         .delete()
         .eq('doctor_id', doctorId);
 
     await _client
-        .from(AppConstants.tableHistoriasClinicas)
+        .from(AppConstants.tablePacientes)
         .delete()
         .eq('doctor_id', doctorId);
 
@@ -123,8 +123,6 @@ class RemoteAuthDataSource {
         .from(AppConstants.tableDoctores)
         .delete()
         .eq('id', doctorId);
-
-    await _client.auth.admin.deleteUser(doctorId);
   }
 
   Future<List<Map<String, dynamic>>> getPacientesPorMes() async {
@@ -143,7 +141,10 @@ class RemoteAuthDataSource {
     }
 
     for (final row in response) {
-      final fecha = DateTime.parse(row['created_at'] as String);
+      final raw = row['created_at'] as String?;
+      if (raw == null) continue;
+      final fecha = DateTime.tryParse(raw);
+      if (fecha == null) continue;
       final key =
           '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}';
       if (counts.containsKey(key)) {
@@ -168,7 +169,7 @@ class RemoteAuthDataSource {
     final doctoresResponse = await _client
         .from(AppConstants.tableDoctores)
         .select('id')
-        .eq('activo', true);
+        .eq('activo', 1);
 
     return {
       'campanasActivas': campanasResponse.length,

@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/utils/session_manager.dart';
 import '../../features/admin/presentation/bloc/admin_bloc.dart';
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
@@ -45,6 +46,13 @@ class AppRouter {
       GoRoute(
         path: adminDashboard,
         name: 'adminDashboard',
+        redirect: (context, state) async {
+          final isAdmin = await SessionManager.isAdmin();
+          if (!isAdmin) {
+            return login;
+          }
+          return null;
+        },
         builder: (context, state) => BlocProvider<AdminBloc>(
           create: (_) => di.sl<AdminBloc>(),
           child: const AdminDashboardScreen(),
