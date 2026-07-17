@@ -14,6 +14,15 @@ class RemoteCampanaDataSource {
 
   Future<void> upsert(CampanaDTO campana) async {
     try {
+      final currentUser = _supabaseClient.auth.currentUser;
+      if (currentUser == null) {
+        throw DataSourceException('Usuario no autenticado');
+      }
+      if (campana.creadoPor != currentUser.id) {
+        throw DataSourceException(
+          'No autorizado: creado_por no coincide con usuario actual',
+        );
+      }
       final data = _toSupabaseMap(campana);
       await _supabaseClient.from(_tableName).upsert(data);
     } on PostgrestException catch (e) {
@@ -22,6 +31,8 @@ class RemoteCampanaDataSource {
         'Error al sincronizar campana en remoto',
         originalError: e,
       );
+    } on DataSourceException {
+      rethrow;
     } on Exception catch (e) {
       debugPrint('[RemoteCampanaDataSource] upsert unexpected error: $e');
       throw DataSourceException(

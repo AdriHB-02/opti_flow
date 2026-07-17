@@ -12,7 +12,13 @@ class LastWriteWinsStrategy implements ISyncStrategy {
     if (localUpdatedAt.isAfter(remoteUpdatedAt)) {
       return local;
     }
-    return remote;
+    if (remoteUpdatedAt.isAfter(localUpdatedAt)) {
+      return remote;
+    }
+
+    final localCreatedAt = _parseDateTime(local['created_at']);
+    final remoteCreatedAt = _parseDateTime(remote['created_at']);
+    return localCreatedAt.isAfter(remoteCreatedAt) ? local : remote;
   }
 
   DateTime _parseDateTime(Object? value) {

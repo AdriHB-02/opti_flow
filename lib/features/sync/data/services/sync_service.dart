@@ -179,18 +179,7 @@ class SyncService implements ISyncService {
     Map<String, dynamic> localData,
     String tabla,
   ) {
-    final converted = Map<String, dynamic>.from(localData);
-
-    switch (tabla) {
-      case AppConstants.tablePacientes:
-        converted['es_reconsulta'] = converted['es_reconsulta'] == 1;
-        break;
-      case AppConstants.tableHistoriasClinicas:
-        converted['sincronizado'] = converted['sincronizado'] == 1;
-        break;
-    }
-
-    return converted;
+    return Map<String, dynamic>.from(localData);
   }
 
   void dispose() {

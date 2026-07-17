@@ -14,6 +14,15 @@ class RemotePatientDataSource {
 
   Future<void> upsert(PatientDTO patient) async {
     try {
+      final currentUser = _supabaseClient.auth.currentUser;
+      if (currentUser == null) {
+        throw DataSourceException('Usuario no autenticado');
+      }
+      if (patient.doctorId != currentUser.id) {
+        throw DataSourceException(
+          'No autorizado: doctor_id no coincide con usuario actual',
+        );
+      }
       final data = _toSupabaseMap(patient);
       await _supabaseClient.from(_tableName).upsert(data);
     } on PostgrestException catch (e) {
@@ -22,6 +31,8 @@ class RemotePatientDataSource {
         'Error al sincronizar paciente en remoto',
         originalError: e,
       );
+    } on DataSourceException {
+      rethrow;
     } on Exception catch (e) {
       debugPrint('[RemotePatientDataSource] upsert unexpected error: $e');
       throw DataSourceException(

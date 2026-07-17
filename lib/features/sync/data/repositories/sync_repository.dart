@@ -22,7 +22,7 @@ class SyncRepository implements ISyncRepository {
       final maps = await db.query(
         AppConstants.tableSyncLog,
         where: 'sincronizado = ? AND intentos < ?',
-        whereArgs: [0, 4],
+        whereArgs: [0, AppConstants.maxSyncRetries + 1],
         orderBy: 'fecha_local ASC',
       );
       final entities = maps
