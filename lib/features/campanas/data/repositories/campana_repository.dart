@@ -8,13 +8,18 @@ import '../../domain/entities/campana_entity.dart';
 import '../../domain/entities/doctor_progress.dart';
 import '../../domain/repositories/i_campana_repository.dart';
 import '../datasources/local_campana_data_source.dart';
+import '../datasources/remote_campana_data_source.dart';
 import '../models/campana_dto.dart';
 
 class CampanaRepository implements ICampanaRepository {
   final LocalCampanaDataSource _localDataSource;
+  final RemoteCampanaDataSource? _remoteDataSource;
 
-  CampanaRepository({required LocalCampanaDataSource localDataSource})
-      : _localDataSource = localDataSource;
+  CampanaRepository({
+    required LocalCampanaDataSource localDataSource,
+    RemoteCampanaDataSource? remoteDataSource,
+  })  : _localDataSource = localDataSource,
+        _remoteDataSource = remoteDataSource;
 
   @override
   Future<Either<Failure, CampanaEntity>> createCampana(
@@ -23,6 +28,15 @@ class CampanaRepository implements ICampanaRepository {
     try {
       final dto = CampanaDTO.fromEntity(campana);
       await _localDataSource.insertCampana(dto);
+
+      if (_remoteDataSource != null) {
+        try {
+          await _remoteDataSource.upsert(dto);
+        } catch (e) {
+          debugPrint('[CampanaRepository] Remote upsert failed, saved locally: $e');
+        }
+      }
+
       return Right(campana);
     } on DataSourceException catch (e) {
       debugPrint('[Repo] createCampana error: $e — original: ${e.originalError}');
@@ -35,8 +49,20 @@ class CampanaRepository implements ICampanaRepository {
     String doctorId,
   ) async {
     try {
-      final dtos = await _localDataSource.getCampanasByDoctor(doctorId);
-      final entities = dtos.map((dto) => dto.toEntity()).toList();
+      final localDtos = await _localDataSource.getCampanasByDoctor(doctorId);
+
+      if (_remoteDataSource != null) {
+        try {
+          final remoteDtos = await _remoteDataSource.getByDoctorId(doctorId);
+          final merged = _mergeCampanaLists(localDtos, remoteDtos);
+          final entities = merged.map((dto) => dto.toEntity()).toList();
+          return Right(entities);
+        } catch (e) {
+          debugPrint('[CampanaRepository] Remote fetch failed, using local: $e');
+        }
+      }
+
+      final entities = localDtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
     } on DataSourceException catch (e) {
       debugPrint('[Repo] getCampanasByDoctor error: $e — original: ${e.originalError}');
@@ -112,5 +138,31 @@ class CampanaRepository implements ICampanaRepository {
       debugPrint('[Repo] createEmpresa error: $e — original: ${e.originalError}');
       return Left(CacheFailure('Error al crear empresa'));
     }
+  }
+
+  List<CampanaDTO> _mergeCampanaLists(
+    List<CampanaDTO> local,
+    List<CampanaDTO> remote,
+  ) {
+    final mergedMap = <String, CampanaDTO>{};
+
+    for (final remoteDto in remote) {
+      mergedMap[remoteDto.id] = remoteDto;
+    }
+
+    for (final localDto in local) {
+      final existing = mergedMap[localDto.id];
+      if (existing == null) {
+        mergedMap[localDto.id] = localDto;
+      } else {
+        if (localDto.fechaFin.isAfter(existing.fechaFin)) {
+          mergedMap[localDto.id] = localDto;
+        }
+      }
+    }
+
+    final merged = mergedMap.values.toList();
+    merged.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return merged;
   }
 }

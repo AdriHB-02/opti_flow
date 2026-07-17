@@ -14,6 +14,7 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/patients/data/datasources/local_patient_data_source.dart';
 import 'features/patients/data/datasources/local_historia_data_source.dart';
 import 'features/patients/data/datasources/local_dependencia_data_source.dart';
+import 'features/patients/data/datasources/remote_patient_data_source.dart';
 import 'features/patients/data/repositories/historia_repository.dart';
 import 'features/patients/data/repositories/patient_repository.dart';
 import 'features/patients/data/repositories/dependencia_repository.dart';
@@ -28,6 +29,7 @@ import 'features/patients/domain/usecases/search_patient_usecase.dart';
 import 'features/patients/presentation/bloc/patient_bloc.dart';
 import 'features/patients/presentation/bloc/historia_bloc.dart';
 import 'features/campanas/data/datasources/local_campana_data_source.dart';
+import 'features/campanas/data/datasources/remote_campana_data_source.dart';
 import 'features/campanas/data/repositories/campana_repository.dart';
 import 'features/campanas/domain/repositories/i_campana_repository.dart';
 import 'features/campanas/domain/usecases/assign_doctor_to_campana_usecase.dart';
@@ -84,19 +86,31 @@ Future<void> init() async {
   sl.registerLazySingleton<LocalDependenciaDataSource>(
     () => LocalDependenciaDataSource(databaseHelper: sl()),
   );
+  sl.registerLazySingleton<RemotePatientDataSource>(
+    () => RemotePatientDataSource(supabaseClient: sl()),
+  );
+  sl.registerLazySingleton<RemoteCampanaDataSource>(
+    () => RemoteCampanaDataSource(supabaseClient: sl()),
+  );
 
   // ── Repositories ──
   sl.registerLazySingleton<IAuthRepository>(
     () => AuthRepository(remoteDataSource: sl()),
   );
   sl.registerLazySingleton<IPatientRepository>(
-    () => PatientRepository(localDataSource: sl()),
+    () => PatientRepository(
+      localDataSource: sl(),
+      remoteDataSource: sl(),
+    ),
   );
   sl.registerLazySingleton<IHistoriaRepository>(
     () => HistoriaRepository(localDataSource: sl()),
   );
   sl.registerLazySingleton<ICampanaRepository>(
-    () => CampanaRepository(localDataSource: sl()),
+    () => CampanaRepository(
+      localDataSource: sl(),
+      remoteDataSource: sl(),
+    ),
   );
   sl.registerLazySingleton<IDependenciaRepository>(
     () => DependenciaRepository(localDataSource: sl()),
