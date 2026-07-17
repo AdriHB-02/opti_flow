@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/database/database_helper.dart';
@@ -19,8 +20,47 @@ class LocalPatientDataSource {
         patient.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
+
+      await _databaseHelper.insertSyncLogEntry({
+        'id': const Uuid().v4(),
+        'doctor_id': patient.doctorId,
+        'tabla_afectada': AppConstants.tablePacientes,
+        'registro_id': patient.id,
+        'operacion': 'INSERT',
+        'fecha_local': DateTime.now().toIso8601String(),
+        'sincronizado': 0,
+        'fecha_sync': null,
+        'intentos': 0,
+      });
     } on DatabaseException catch (e) {
       throw DataSourceException('Error al insertar paciente', originalError: e);
+    }
+  }
+
+  Future<void> updatePatient(PatientDTO patient) async {
+    try {
+      final db = await _databaseHelper.database;
+      await db.update(
+        AppConstants.tablePacientes,
+        patient.toMap(),
+        where: 'id = ?',
+        whereArgs: [patient.id],
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      await _databaseHelper.insertSyncLogEntry({
+        'id': const Uuid().v4(),
+        'doctor_id': patient.doctorId,
+        'tabla_afectada': AppConstants.tablePacientes,
+        'registro_id': patient.id,
+        'operacion': 'UPDATE',
+        'fecha_local': DateTime.now().toIso8601String(),
+        'sincronizado': 0,
+        'fecha_sync': null,
+        'intentos': 0,
+      });
+    } on DatabaseException catch (e) {
+      throw DataSourceException('Error al actualizar paciente', originalError: e);
     }
   }
 
@@ -96,7 +136,7 @@ class LocalPatientDataSource {
       return maps.map((map) => PatientDTO.fromMap(map)).toList();
     } on DatabaseException catch (e) {
       throw DataSourceException(
-        'Error al obtener pacientes por campaña',
+        'Error al obtener pacientes por campana',
         originalError: e,
       );
     }

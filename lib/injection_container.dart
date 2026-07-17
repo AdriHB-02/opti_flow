@@ -44,6 +44,15 @@ import 'features/admin/domain/usecases/get_global_stats_usecase.dart';
 import 'features/admin/domain/usecases/get_patients_by_month_usecase.dart';
 import 'features/admin/presentation/bloc/admin_bloc.dart';
 
+import 'features/sync/data/repositories/sync_repository.dart';
+import 'features/sync/data/services/sync_service.dart';
+import 'features/sync/domain/repositories/i_sync_repository.dart';
+import 'features/sync/domain/services/connectivity_service.dart';
+import 'features/sync/domain/services/i_sync_service.dart';
+import 'features/sync/domain/strategies/i_sync_strategy.dart';
+import 'features/sync/domain/strategies/last_write_wins_strategy.dart';
+import 'features/sync/presentation/bloc/sync_bloc.dart';
+
 import 'core/database/database_helper.dart';
 
 final sl = GetIt.instance;
@@ -55,6 +64,9 @@ Future<void> init() async {
   // ── Database ──
   sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
   await sl<DatabaseHelper>().database;
+
+  // ── Sync Strategy ──
+  sl.registerLazySingleton<ISyncStrategy>(() => LastWriteWinsStrategy());
 
   // ── Data Sources ──
   sl.registerLazySingleton<RemoteAuthDataSource>(
@@ -88,6 +100,21 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<IDependenciaRepository>(
     () => DependenciaRepository(localDataSource: sl()),
+  );
+  sl.registerLazySingleton<ISyncRepository>(
+    () => SyncRepository(databaseHelper: sl()),
+  );
+
+  // ── Sync Service ──
+  sl.registerLazySingleton<ISyncService>(
+    () => SyncService(
+      syncRepository: sl(),
+      supabaseClient: sl(),
+      syncStrategy: sl(),
+    ),
+  );
+  sl.registerLazySingleton<ConnectivityService>(
+    () => ConnectivityService(syncService: sl()),
   );
 
   // ── Use Cases ──
@@ -194,6 +221,14 @@ Future<void> init() async {
       getCampanaProgressUseCase: sl(),
       importPacientesReconsultaUseCase: sl(),
       getCampanasByDoctorUseCase: sl(),
+    ),
+  );
+
+  // ── Sync BLoC ──
+  sl.registerFactory<SyncBloc>(
+    () => SyncBloc(
+      syncService: sl(),
+      connectivityService: sl(),
     ),
   );
 }

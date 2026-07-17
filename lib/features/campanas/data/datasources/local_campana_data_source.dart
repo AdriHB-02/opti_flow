@@ -23,10 +23,50 @@ class LocalCampanaDataSource {
         campana.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
+
+      await _databaseHelper.insertSyncLogEntry({
+        'id': const Uuid().v4(),
+        'doctor_id': campana.creadoPor,
+        'tabla_afectada': AppConstants.tableCampanas,
+        'registro_id': campana.id,
+        'operacion': 'INSERT',
+        'fecha_local': DateTime.now().toIso8601String(),
+        'sincronizado': 0,
+        'fecha_sync': null,
+        'intentos': 0,
+      });
     } on DatabaseException catch (e) {
       debugPrint('[DataSource] insertCampana error: $e');
       debugPrint('[DataSource] campana.toMap(): ${campana.toMap()}');
-      throw DataSourceException('Error al insertar campaña', originalError: e);
+      throw DataSourceException('Error al insertar campana', originalError: e);
+    }
+  }
+
+  Future<void> updateCampana(CampanaDTO campana) async {
+    try {
+      final db = await _databaseHelper.database;
+      await db.update(
+        AppConstants.tableCampanas,
+        campana.toMap(),
+        where: 'id = ?',
+        whereArgs: [campana.id],
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      await _databaseHelper.insertSyncLogEntry({
+        'id': const Uuid().v4(),
+        'doctor_id': campana.creadoPor,
+        'tabla_afectada': AppConstants.tableCampanas,
+        'registro_id': campana.id,
+        'operacion': 'UPDATE',
+        'fecha_local': DateTime.now().toIso8601String(),
+        'sincronizado': 0,
+        'fecha_sync': null,
+        'intentos': 0,
+      });
+    } on DatabaseException catch (e) {
+      debugPrint('[DataSource] updateCampana error: $e');
+      throw DataSourceException('Error al actualizar campana', originalError: e);
     }
   }
 
@@ -47,7 +87,7 @@ class LocalCampanaDataSource {
       return maps.map((map) => CampanaDTO.fromMap(map)).toList();
     } on DatabaseException catch (e) {
       debugPrint('[DataSource] getCampanasByDoctor error: $e');
-      throw DataSourceException('Error al obtener campañas', originalError: e);
+      throw DataSourceException('Error al obtener campanas', originalError: e);
     }
   }
 
@@ -65,7 +105,7 @@ class LocalCampanaDataSource {
       final count = result.first['count'] as int;
       return count > 0;
     } on DatabaseException catch (e) {
-      debugPrint('[DataSource] checkDuplicate error: $e — empresa=$nombreEmpresa lugar=$lugar');
+      debugPrint('[DataSource] checkDuplicate error: $e -- empresa=$nombreEmpresa lugar=$lugar');
       throw DataSourceException('Error al verificar duplicado', originalError: e);
     }
   }
@@ -80,7 +120,7 @@ class LocalCampanaDataSource {
         limit: 1,
       );
       if (existing.isNotEmpty) {
-        throw DataSourceException('El doctor ya está asignado a esta campaña');
+        throw DataSourceException('El doctor ya esta asignado a esta campana');
       }
       await db.insert(
         AppConstants.tableDoctorCampana,
@@ -92,7 +132,7 @@ class LocalCampanaDataSource {
         },
       );
     } on DatabaseException catch (e) {
-      throw DataSourceException('Error al asignar doctor a campaña', originalError: e);
+      throw DataSourceException('Error al asignar doctor a campana', originalError: e);
     }
   }
 
@@ -115,7 +155,7 @@ class LocalCampanaDataSource {
       return maps.map((map) => DoctorProgressDTO.fromMap(map)).toList();
     } on DatabaseException catch (e) {
       throw DataSourceException(
-        'Error al obtener progreso de campaña',
+        'Error al obtener progreso de campana',
         originalError: e,
       );
     }
@@ -130,7 +170,7 @@ class LocalCampanaDataSource {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } on DatabaseException catch (e) {
-      debugPrint('[DataSource] insertEmpresa error: $e — map: $empresaMap');
+      debugPrint('[DataSource] insertEmpresa error: $e -- map: $empresaMap');
       throw DataSourceException('Error al insertar empresa', originalError: e);
     }
   }

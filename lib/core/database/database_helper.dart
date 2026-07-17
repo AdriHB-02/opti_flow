@@ -150,6 +150,7 @@ class DatabaseHelper {
         fecha_local TEXT NOT NULL,
         sincronizado INTEGER NOT NULL DEFAULT 0,
         fecha_sync TEXT,
+        intentos INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (doctor_id) REFERENCES ${AppConstants.tableDoctores}(id)
       )
     ''');
@@ -216,6 +217,9 @@ class DatabaseHelper {
       }
       if (oldVersion < 3) {
         await _migrateV2toV3(db);
+      }
+      if (oldVersion < 4) {
+        await _migrateV3toV4(db);
       }
     } catch (e) {
       debugPrint('[DB] Migración v$oldVersion→v$newVersion falló: $e');
@@ -288,6 +292,13 @@ class DatabaseHelper {
     ''');
   }
 
+  Future<void> _migrateV3toV4(Database db) async {
+    await db.execute('''
+      ALTER TABLE ${AppConstants.tableSyncLog}
+      ADD COLUMN intentos INTEGER NOT NULL DEFAULT 0
+    ''');
+  }
+
   Future<void> clearAllData() async {
     final db = await database;
     await db.transaction((txn) async {
@@ -313,6 +324,30 @@ class DatabaseHelper {
       }
       await batch.commit(noResult: true);
     });
+  }
+
+  Future<Map<String, dynamic>?> getRecordById(
+    String table,
+    String recordId,
+  ) async {
+    final db = await database;
+    final maps = await db.query(
+      table,
+      where: 'id = ?',
+      whereArgs: [recordId],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return maps.first;
+  }
+
+  Future<void> insertSyncLogEntry(Map<String, dynamic> syncLogMap) async {
+    final db = await database;
+    await db.insert(
+      AppConstants.tableSyncLog,
+      syncLogMap,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> close() async {

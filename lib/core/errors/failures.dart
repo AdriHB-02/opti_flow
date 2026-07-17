@@ -19,3 +19,7 @@ class CacheFailure extends Failure {
 class ServerFailure extends Failure {
   const ServerFailure(super.message);
 }
+
+class SyncFailure extends Failure {
+  const SyncFailure(super.message);
+}

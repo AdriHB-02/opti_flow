@@ -9,4 +9,11 @@ abstract class ISyncRepository {
   Future<Either<Failure, void>> markAsSynced(String syncLogId);
 
   Future<Either<Failure, SyncLogEntity>> insertSyncLog(SyncLogEntity syncLog);
+
+  Future<Either<Failure, void>> incrementIntentos(String syncLogId);
+
+  Future<Either<Failure, Map<String, dynamic>?>> getRecordById(
+    String tabla,
+    String registroId,
+  );
 }
