@@ -27,3 +27,11 @@ class SyncFailure extends Failure {
 class LocationFailure extends Failure {
   const LocationFailure(super.message);
 }
+
+class CameraFailure extends Failure {
+  const CameraFailure(super.message);
+}
+
+class S3Failure extends Failure {
+  const S3Failure(super.message);
+}

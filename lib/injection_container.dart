@@ -19,10 +19,14 @@ import 'features/patients/data/repositories/historia_repository.dart';
 import 'features/patients/data/repositories/patient_repository.dart';
 import 'features/patients/data/repositories/dependencia_repository.dart';
 import 'features/patients/data/services/gps_service.dart';
+import 'features/patients/data/services/camera_service.dart';
+import 'features/patients/data/services/s3_upload_service.dart';
 import 'features/patients/domain/repositories/i_historia_repository.dart';
 import 'features/patients/domain/repositories/i_patient_repository.dart';
 import 'features/patients/domain/repositories/i_dependencia_repository.dart';
 import 'features/patients/domain/services/i_gps_service.dart';
+import 'features/patients/domain/services/i_camera_service.dart';
+import 'features/patients/domain/services/i_s3_upload_service.dart';
 import 'features/patients/domain/usecases/get_dependencias_usecase.dart';
 import 'features/patients/domain/usecases/get_historias_by_paciente_usecase.dart';
 import 'features/patients/domain/usecases/get_patients_usecase.dart';
@@ -74,6 +78,12 @@ Future<void> init() async {
 
   // ── GPS Service ──
   sl.registerLazySingleton<IGpsService>(() => GpsService());
+
+  // ── Camera Service ──
+  sl.registerLazySingleton<ICameraService>(() => CameraService());
+
+  // ── S3 Upload Service ──
+  sl.registerLazySingleton<IS3UploadService>(() => S3UploadService());
 
   // ── Data Sources ──
   sl.registerLazySingleton<RemoteAuthDataSource>(

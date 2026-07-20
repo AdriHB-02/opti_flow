@@ -1,12 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/session_manager.dart';
 import '../../domain/entities/dependencia_entity.dart';
+import '../../domain/services/i_camera_service.dart';
 import '../../domain/services/i_gps_service.dart';
+import '../../domain/services/i_s3_upload_service.dart';
 import '../../domain/usecases/get_dependencias_usecase.dart';
 import '../../domain/usecases/register_patient_usecase.dart';
 import '../bloc/patient_bloc.dart';
@@ -28,6 +33,8 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
   final GetDependenciasUseCase _getDependencias =
       GetIt.instance<GetDependenciasUseCase>();
   final IGpsService _gpsService = GetIt.instance<IGpsService>();
+  final ICameraService _cameraService = GetIt.instance<ICameraService>();
+  final IS3UploadService _s3UploadService = GetIt.instance<IS3UploadService>();
 
   List<DependenciaEntity> _dependencias = [];
   DependenciaEntity? _selectedDependencia;
@@ -39,6 +46,10 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
   bool _gpsLoading = true;
   bool _gpsAvailable = false;
   String? _gpsError;
+
+  File? _capturedPhoto;
+  String? _uploadedImageUrl;
+  bool _photoLoading = false;
 
   @override
   void initState() {
@@ -131,6 +142,30 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
     });
   }
 
+  Future<void> _capturePhoto() async {
+    try {
+      final photo = await _cameraService.takePhoto();
+      if (photo == null) return;
+      if (!mounted) return;
+      setState(() {
+        _capturedPhoto = photo;
+        _uploadedImageUrl = null;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo capturar la foto')),
+      );
+    }
+  }
+
+  void _retakePhoto() {
+    setState(() {
+      _capturedPhoto = null;
+      _uploadedImageUrl = null;
+    });
+  }
+
   Future<void> _loadDependencias() async {
     final session = await SessionManager.load();
     if (!mounted) return;
@@ -160,7 +195,7 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
     );
   }
 
-  void _onSave() {
+  void _onSave() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedDependencia == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -169,11 +204,37 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
       return;
     }
 
+    String? imageUrl = _uploadedImageUrl;
+
+    if (_capturedPhoto != null && imageUrl == null) {
+      setState(() => _photoLoading = true);
+      try {
+        imageUrl = await _s3UploadService.uploadImage(
+          _capturedPhoto!,
+          path: 'diagnosticos/${_doctorId ?? "unknown"}/${DateTime.now().millisecondsSinceEpoch}.jpg',
+        );
+        _uploadedImageUrl = imageUrl;
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _photoLoading = false);
+        final message = e is S3Failure
+            ? e.message
+            : 'Error al subir la foto';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _photoLoading = false);
+    }
+
     final params = RegisterPatientParams(
       nombreCompleto: _nameController.text.trim(),
       dependenciaId: _selectedDependencia!.id,
       doctorId: _doctorId ?? '',
       diagnosticoTexto: _diagnosticoController.text.trim(),
+      imagenUrl: imageUrl,
       latitud: _capturedLat,
       longitud: _capturedLng,
       fechaAtencion: DateTime.now(),
@@ -270,12 +331,16 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildGpsConfirmationCard(),
+                    const SizedBox(height: 16),
+                    _buildPhotoSection(),
                     const SizedBox(height: 24),
                     SizedBox(
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: state is PatientLoading ? null : _onSave,
-                        child: state is PatientLoading
+                        onPressed: state is PatientLoading || _photoLoading
+                            ? null
+                            : _onSave,
+                        child: state is PatientLoading || _photoLoading
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,
@@ -406,6 +471,68 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPhotoSection() {
+    if (_capturedPhoto != null) {
+      return Card(
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Stack(
+              alignment: Alignment.topRight,
+              children: [
+                Image.file(
+                  _capturedPhoto!,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.black54,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, size: 18, color: Colors.white),
+                      onPressed: _retakePhoto,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (_uploadedImageUrl != null)
+              const Padding(
+                padding: EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Foto subida correctamente',
+                      style: TextStyle(color: Colors.green, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return OutlinedButton.icon(
+      onPressed: _photoLoading ? null : _capturePhoto,
+      icon: _photoLoading
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.camera_alt),
+      label: Text(_photoLoading ? 'Capturando foto...' : 'Foto de diagnóstico'),
     );
   }
 }
