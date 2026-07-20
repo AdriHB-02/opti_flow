@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../../../../core/utils/session_manager.dart';
 import '../../domain/entities/dependencia_entity.dart';
+import '../../domain/services/i_gps_service.dart';
 import '../../domain/usecases/get_dependencias_usecase.dart';
 import '../../domain/usecases/register_patient_usecase.dart';
 import '../bloc/patient_bloc.dart';
@@ -25,16 +27,108 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
 
   final GetDependenciasUseCase _getDependencias =
       GetIt.instance<GetDependenciasUseCase>();
+  final IGpsService _gpsService = GetIt.instance<IGpsService>();
 
   List<DependenciaEntity> _dependencias = [];
   DependenciaEntity? _selectedDependencia;
   bool _loadingDeps = true;
   String? _doctorId;
 
+  double _capturedLat = 0.0;
+  double _capturedLng = 0.0;
+  bool _gpsLoading = true;
+  bool _gpsAvailable = false;
+  String? _gpsError;
+
   @override
   void initState() {
     super.initState();
     _loadDependencias();
+    _captureGps();
+  }
+
+  Future<void> _captureGps() async {
+    setState(() {
+      _gpsLoading = true;
+      _gpsError = null;
+    });
+
+    try {
+      final hasPermission = await _gpsService.checkAndRequestPermission();
+      if (!hasPermission) {
+        if (!mounted) return;
+        setState(() {
+          _gpsLoading = false;
+          _gpsAvailable = false;
+        });
+        _showPermissionDialog();
+        return;
+      }
+
+      final location = await _gpsService.getCurrentLocation();
+      if (!mounted) return;
+      setState(() {
+        _capturedLat = location.lat;
+        _capturedLng = location.lng;
+        _gpsAvailable = true;
+        _gpsLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _gpsLoading = false;
+        _gpsAvailable = false;
+        _gpsError = 'Error al obtener ubicación';
+      });
+      _showPermissionDialog();
+    }
+  }
+
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.location_off, size: 48, color: Colors.orange),
+        title: const Text('Permiso de ubicación requerido'),
+        content: const Text(
+          'OptiFlow necesita acceder a tu ubicación GPS para registrar '
+          'el lugar donde se atiende al paciente. '
+          'Sin este permiso, la ubicación se guardará como no disponible.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _saveWithoutGps();
+            },
+            child: const Text('Guardar sin GPS'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Geolocator.openAppSettings();
+            },
+            child: const Text('Abrir Configuración'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _captureGps();
+            },
+            child: const Text('Reintentar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _saveWithoutGps() {
+    setState(() {
+      _capturedLat = 0.0;
+      _capturedLng = 0.0;
+      _gpsAvailable = false;
+    });
   }
 
   Future<void> _loadDependencias() async {
@@ -80,6 +174,8 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
       dependenciaId: _selectedDependencia!.id,
       doctorId: _doctorId ?? '',
       diagnosticoTexto: _diagnosticoController.text.trim(),
+      latitud: _capturedLat,
+      longitud: _capturedLng,
       fechaAtencion: DateTime.now(),
     );
 
@@ -156,7 +252,9 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
                           setState(() => _selectedDependencia = value);
                         },
                         validator: (value) {
-                          if (value == null) return 'Selecciona una dependencia';
+                          if (value == null) {
+                            return 'Selecciona una dependencia';
+                          }
                           return null;
                         },
                       ),
@@ -170,6 +268,8 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
                       ),
                       maxLines: 4,
                     ),
+                    const SizedBox(height: 16),
+                    _buildGpsConfirmationCard(),
                     const SizedBox(height: 24),
                     SizedBox(
                       height: 48,
@@ -179,8 +279,8 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Text('Guardar Paciente'),
                       ),
@@ -190,6 +290,120 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGpsConfirmationCard() {
+    if (_gpsLoading) {
+      return Card(
+        color: Colors.blue.shade50,
+        child: const Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 12),
+              Text('Obteniendo ubicación GPS...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_gpsAvailable) {
+      return Card(
+        color: Colors.green.shade50,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.location_on, color: Colors.green, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Ubicación capturada',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Latitud: ${_capturedLat.toStringAsFixed(6)}',
+                style: const TextStyle(fontSize: 14),
+              ),
+              Text(
+                'Longitud: ${_capturedLng.toStringAsFixed(6)}',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: _captureGps,
+                child: const Text(
+                  'Actualizar ubicación',
+                  style: TextStyle(
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      color: Colors.orange.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.location_off, color: Colors.orange.shade700, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Sin ubicación GPS',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+              ],
+            ),
+            if (_gpsError != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                _gpsError!,
+                style: const TextStyle(fontSize: 12, color: Colors.red),
+              ),
+            ],
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: _captureGps,
+              child: const Text(
+                'Reintentar captura de ubicación',
+                style: TextStyle(
+                  color: Colors.blue,
+                  decoration: TextDecoration.underline,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

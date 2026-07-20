@@ -8,6 +8,7 @@ import '../entities/historia_clinica_entity.dart';
 import '../entities/patient_entity.dart';
 import '../repositories/i_historia_repository.dart';
 import '../repositories/i_patient_repository.dart';
+import '../services/i_gps_service.dart';
 
 class RegisterPatientParams extends Equatable {
   final String nombreCompleto;
@@ -35,6 +36,34 @@ class RegisterPatientParams extends Equatable {
     required this.fechaAtencion,
     this.historiaAnteriorId,
   });
+
+  RegisterPatientParams copyWith({
+    String? nombreCompleto,
+    String? dependenciaId,
+    String? doctorId,
+    bool? esReconsulta,
+    String? campanaId,
+    String? diagnosticoTexto,
+    String? imagenUrl,
+    double? latitud,
+    double? longitud,
+    DateTime? fechaAtencion,
+    String? historiaAnteriorId,
+  }) {
+    return RegisterPatientParams(
+      nombreCompleto: nombreCompleto ?? this.nombreCompleto,
+      dependenciaId: dependenciaId ?? this.dependenciaId,
+      doctorId: doctorId ?? this.doctorId,
+      esReconsulta: esReconsulta ?? this.esReconsulta,
+      campanaId: campanaId ?? this.campanaId,
+      diagnosticoTexto: diagnosticoTexto ?? this.diagnosticoTexto,
+      imagenUrl: imagenUrl ?? this.imagenUrl,
+      latitud: latitud ?? this.latitud,
+      longitud: longitud ?? this.longitud,
+      fechaAtencion: fechaAtencion ?? this.fechaAtencion,
+      historiaAnteriorId: historiaAnteriorId ?? this.historiaAnteriorId,
+    );
+  }
 
   PatientEntity toPatientEntity(String id) {
     final now = DateTime.now();
@@ -86,14 +115,34 @@ class RegisterPatientUseCase
     implements UseCase<void, RegisterPatientParams> {
   final IPatientRepository patientRepository;
   final IHistoriaRepository historiaRepository;
+  final IGpsService gpsService;
 
   RegisterPatientUseCase({
     required this.patientRepository,
     required this.historiaRepository,
+    required this.gpsService,
   });
 
   @override
   Future<Either<Failure, void>> call(RegisterPatientParams params) async {
+    double lat = params.latitud;
+    double lng = params.longitud;
+
+    if (lat == 0.0 && lng == 0.0) {
+      try {
+        final hasPermission = await gpsService.checkAndRequestPermission();
+        if (hasPermission) {
+          final location = await gpsService.getCurrentLocation();
+          lat = location.lat;
+          lng = location.lng;
+        }
+      } catch (_) {
+        return const Left(LocationFailure(
+          'No se pudo obtener la ubicación GPS',
+        ));
+      }
+    }
+
     final patientId = const Uuid().v4();
     final historiaId = const Uuid().v4();
 
@@ -105,8 +154,9 @@ class RegisterPatientUseCase
     );
     if (patientResult != null) return patientResult;
 
+    final updatedParams = params.copyWith(latitud: lat, longitud: lng);
     final historiaEither = await historiaRepository
-        .saveHistoria(params.toHistoriaEntity(historiaId, patientId));
+        .saveHistoria(updatedParams.toHistoriaEntity(historiaId, patientId));
     return historiaEither.fold(
       (failure) => Left<Failure, void>(failure),
       (_) => const Right<Failure, void>(null),

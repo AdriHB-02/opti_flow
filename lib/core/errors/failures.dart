@@ -23,3 +23,7 @@ class ServerFailure extends Failure {
 class SyncFailure extends Failure {
   const SyncFailure(super.message);
 }
+
+class LocationFailure extends Failure {
+  const LocationFailure(super.message);
+}
