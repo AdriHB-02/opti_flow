@@ -77,6 +77,11 @@ class _JefeDashboardScreenState extends State<JefeDashboardScreen> {
           title: const Text('OptiFlow - Jefe Dashboard'),
           actions: [
             IconButton(
+              icon: const Icon(Icons.map),
+              tooltip: 'Mapa de campañas',
+              onPressed: () => context.push(AppRouter.jefeMap),
+            ),
+            IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () => context.read<AuthBloc>().add(const LogoutRequested()),
             ),

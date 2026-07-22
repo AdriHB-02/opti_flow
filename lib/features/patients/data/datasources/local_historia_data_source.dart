@@ -98,4 +98,22 @@ class LocalHistoriaDataSource {
       throw DataSourceException('Error al obtener historia anterior', originalError: e);
     }
   }
+
+  Future<List<HistoriaClinicaDTO>> getByCampana(String campanaId) async {
+    try {
+      final db = await _databaseHelper.database;
+      final maps = await db.query(
+        AppConstants.tableHistoriasClinicas,
+        where: 'campana_id = ?',
+        whereArgs: [campanaId],
+        orderBy: 'fecha_atencion DESC',
+      );
+      return maps.map((map) => HistoriaClinicaDTO.fromMap(map)).toList();
+    } on DatabaseException catch (e) {
+      throw DataSourceException(
+        'Error al obtener historias clínicas por campaña',
+        originalError: e,
+      );
+    }
+  }
 }

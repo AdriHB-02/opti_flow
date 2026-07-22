@@ -10,6 +10,7 @@ import '../../features/campanas/presentation/bloc/campana_bloc.dart';
 import '../../features/campanas/presentation/screens/assign_doctors_screen.dart';
 import '../../features/campanas/presentation/screens/campana_progress_screen.dart';
 import '../../features/campanas/presentation/screens/jefe_dashboard_screen.dart';
+import '../../features/campanas/presentation/screens/map_screen.dart';
 import '../../features/campanas/presentation/screens/new_campana_screen.dart';
 import '../../features/patients/presentation/screens/new_patient_screen.dart';
 import '../../features/patients/presentation/screens/patient_detail_screen.dart';
@@ -23,6 +24,7 @@ class AppRouter {
   static const String adminDashboard = '/admin';
   static const String jefeDashboard = '/jefe';
   static const String jefeNewCampana = '/jefe/new-campana';
+  static const String jefeMap = '/jefe/map';
   static const String jefeAssignDoctors = '/jefe/assign-doctors';
   static const String jefeCampanaProgress = '/jefe/campana-progress';
   static const String userDashboard = '/user';
@@ -73,6 +75,11 @@ class AppRouter {
           value: di.sl<CampanaBloc>(),
           child: const NewCampanaScreen(),
         ),
+      ),
+      GoRoute(
+        path: jefeMap,
+        name: 'jefeMap',
+        builder: (context, state) => const MapScreen(),
       ),
       GoRoute(
         path: '$jefeAssignDoctors/:campanaId',

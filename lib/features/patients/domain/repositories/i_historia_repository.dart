@@ -17,4 +17,8 @@ abstract class IHistoriaRepository {
     String pacienteId,
     String campanaAnteriorId,
   );
+
+  Future<Either<Failure, List<HistoriaClinicaEntity>>> getHistoriasByCampana(
+    String campanaId,
+  );
 }

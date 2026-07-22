@@ -53,4 +53,17 @@ class HistoriaRepository implements IHistoriaRepository {
       return Left(CacheFailure('Error al obtener historia anterior'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<HistoriaClinicaEntity>>> getHistoriasByCampana(
+    String campanaId,
+  ) async {
+    try {
+      final dtos = await _localDataSource.getByCampana(campanaId);
+      final entities = dtos.map((dto) => dto.toEntity()).toList();
+      return Right(entities);
+    } on DataSourceException {
+      return Left(CacheFailure('Error al obtener historias de la campaña'));
+    }
+  }
 }

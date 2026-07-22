@@ -28,6 +28,7 @@ import 'features/patients/domain/services/i_gps_service.dart';
 import 'features/patients/domain/services/i_camera_service.dart';
 import 'features/patients/domain/services/i_s3_upload_service.dart';
 import 'features/patients/domain/usecases/get_dependencias_usecase.dart';
+import 'features/patients/domain/usecases/get_historias_by_campana_usecase.dart';
 import 'features/patients/domain/usecases/get_historias_by_paciente_usecase.dart';
 import 'features/patients/domain/usecases/get_patients_usecase.dart';
 import 'features/patients/domain/usecases/register_patient_usecase.dart';
@@ -44,6 +45,8 @@ import 'features/campanas/domain/usecases/get_available_doctors_usecase.dart';
 import 'features/campanas/domain/usecases/get_campana_progress_usecase.dart';
 import 'features/campanas/domain/usecases/get_campanas_by_doctor_usecase.dart';
 import 'features/campanas/domain/usecases/import_pacientes_reconsulta_usecase.dart';
+import 'features/campanas/domain/services/i_geocoding_service.dart';
+import 'features/campanas/data/services/geocoding_service.dart';
 import 'features/campanas/presentation/bloc/campana_bloc.dart';
 
 import 'features/admin/domain/usecases/get_all_doctors_usecase.dart';
@@ -84,6 +87,9 @@ Future<void> init() async {
 
   // ── S3 Upload Service ──
   sl.registerLazySingleton<IS3UploadService>(() => S3UploadService());
+
+  // ── Geocoding Service ──
+  sl.registerLazySingleton<IGeocodingService>(() => GeocodingService());
 
   // ── Data Sources ──
   sl.registerLazySingleton<RemoteAuthDataSource>(
@@ -174,6 +180,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<GetHistoriasByPacienteUseCase>(
     () => GetHistoriasByPacienteUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetHistoriasByCampanaUseCase>(
+    () => GetHistoriasByCampanaUseCase(sl()),
   );
 
   // ── Campaña Use Cases ──
