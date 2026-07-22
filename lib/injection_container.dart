@@ -116,7 +116,7 @@ Future<void> init() async {
 
   // ── Repositories ──
   sl.registerLazySingleton<IAuthRepository>(
-    () => AuthRepository(remoteDataSource: sl()),
+    () => AuthRepository(remoteDataSource: sl(), databaseHelper: sl()),
   );
   sl.registerLazySingleton<IPatientRepository>(
     () => PatientRepository(

@@ -1,6 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sqflite/sqflite.dart';
 
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/database/database_helper.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/i_auth_repository.dart';
@@ -9,13 +12,41 @@ import '../factories/user_factory.dart';
 
 class AuthRepository implements IAuthRepository {
   final RemoteAuthDataSource _remoteDataSource;
+  final DatabaseHelper _databaseHelper;
 
-  AuthRepository({required RemoteAuthDataSource remoteDataSource})
-      : _remoteDataSource = remoteDataSource;
+  AuthRepository({
+    required RemoteAuthDataSource remoteDataSource,
+    required DatabaseHelper databaseHelper,
+  })  : _remoteDataSource = remoteDataSource,
+        _databaseHelper = databaseHelper;
+
+  Future<void> _upsertDoctorLocal(Map<String, dynamic> data) async {
+    try {
+      final db = await _databaseHelper.database;
+      final now = DateTime.now().toIso8601String();
+      await db.insert(
+        AppConstants.tableDoctores,
+        {
+          'id': data['id'],
+          'nombre': data['nombre'] ?? '',
+          'email': data['email'] ?? '',
+          'rol': data['rol'] ?? 'USER',
+          'dependencia_local_id': data['dependencia_local_id'],
+          'activo': data['activo'] ?? 1,
+          'created_at': data['created_at'] ?? now,
+          'updated_at': data['updated_at'] ?? now,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (e) {
+      debugPrint('[AuthRepo] _upsertDoctorLocal error: $e');
+    }
+  }
 
   @override
   Future<UserEntity> login(String email, String password) async {
     final data = await _remoteDataSource.login(email, password);
+    await _upsertDoctorLocal(data);
     try {
       return UserFactory.fromMap(data);
     } catch (e) {
@@ -26,6 +57,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<UserEntity> loginBiometrico() async {
     final data = await _remoteDataSource.loginBiometrico();
+    await _upsertDoctorLocal(data);
     try {
       return UserFactory.fromMap(data);
     } catch (e) {
@@ -36,6 +68,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<UserEntity> loginWithGoogle() async {
     final data = await _remoteDataSource.loginWithGoogle();
+    await _upsertDoctorLocal(data);
     try {
       return UserFactory.fromMap(data);
     } catch (e) {
