@@ -43,6 +43,10 @@
 	</array>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Usa tu huella digital o Face ID para iniciar sesión en OptiFlow</string>
+	<key>NSCameraUsageDescription</key>
+	<string>OptiFlow necesita acceder a la cámara para capturar fotos de pacientes durante las jornadas médicas</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>OptiFlow necesita tu ubicación para registrar la ubicación GPS de los pacientes atendidos</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

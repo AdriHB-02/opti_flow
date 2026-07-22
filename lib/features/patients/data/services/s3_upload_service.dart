@@ -16,10 +16,12 @@ class S3UploadService implements IS3UploadService {
   Future<String> uploadImage(File file, {String? path}) async {
     final fileName = path ?? '${const Uuid().v4()}.jpg';
 
-    final response = await _supabaseClient.functions.invoke(
-      'generate-s3-presign',
-      body: {'fileName': fileName, 'contentType': 'image/jpeg'},
-    );
+    final response = await _supabaseClient.functions
+        .invoke(
+          'generate-s3-presign',
+          body: {'fileName': fileName, 'contentType': 'image/jpeg'},
+        )
+        .timeout(const Duration(seconds: 30));
 
     if (response.status != 200) {
       throw Exception(
@@ -31,13 +33,19 @@ class S3UploadService implements IS3UploadService {
     final presignedUrl = data['presignedUrl'] as String;
     final publicUrl = data['publicUrl'] as String;
 
+    if (!presignedUrl.startsWith('https://')) {
+      throw Exception('URL de subida no segura: se requiere HTTPS');
+    }
+
     final fileBytes = await file.readAsBytes();
 
-    final uploadResponse = await http.put(
-      Uri.parse(presignedUrl),
-      headers: {'Content-Type': 'image/jpeg'},
-      body: fileBytes,
-    );
+    final uploadResponse = await http
+        .put(
+          Uri.parse(presignedUrl),
+          headers: {'Content-Type': 'image/jpeg'},
+          body: fileBytes,
+        )
+        .timeout(const Duration(seconds: 60));
 
     if (uploadResponse.statusCode != 200) {
       throw Exception(

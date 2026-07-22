@@ -76,43 +76,51 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _buildMarkers(List<CampanaEntity> campanas) async {
+    final geocodingFutures = campanas.map((campana) async {
+      try {
+        final location = await _geocodingService.locationFromAddress(
+          '${campana.nombreEmpresa}, ${campana.lugar}',
+        );
+        return _GeocodingResult(campana: campana, location: location);
+      } catch (_) {
+        return _GeocodingResult(campana: campana, location: null);
+      }
+    }).toList();
+
+    final results = await Future.wait(geocodingFutures);
+
+    if (!mounted) return;
+
     final markers = <Marker>{};
     final validPositions = <LatLng>[];
 
-    for (var i = 0; i < campanas.length; i++) {
-      final campana = campanas[i];
-      final location = await _geocodingService.locationFromAddress(
-        '${campana.nombreEmpresa}, ${campana.lugar}',
-      );
+    for (final result in results) {
+      if (result.location == null) continue;
 
-      if (!mounted) return;
+      final position = LatLng(result.location!.lat, result.location!.lng);
+      validPositions.add(position);
 
-      if (location != null) {
-        final position = LatLng(location.lat, location.lng);
-        validPositions.add(position);
+      final estado = result.campana.estado == CampanaEstado.activa
+          ? 'Activa'
+          : 'Finalizada';
 
-        final estado = campana.estado == CampanaEstado.activa
-            ? 'Activa'
-            : 'Finalizada';
-
-        markers.add(
-          Marker(
-            markerId: MarkerId(campana.id),
-            position: position,
-            infoWindow: InfoWindow(
-              title: campana.nombreEmpresa,
-              snippet:
-                  '${campana.lugar}\n$estado · '
-                  '${campana.fechaInicio.day}/${campana.fechaInicio.month}/${campana.fechaInicio.year}',
-            ),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              campana.estado == CampanaEstado.activa
-                  ? BitmapDescriptor.hueGreen
-                  : BitmapDescriptor.hueRed,
-            ),
+      markers.add(
+        Marker(
+          markerId: MarkerId(result.campana.id),
+          position: position,
+          infoWindow: InfoWindow(
+            title: result.campana.nombreEmpresa,
+            snippet:
+                '${result.campana.lugar}\n$estado · '
+                '${result.campana.fechaInicio.day}/${result.campana.fechaInicio.month}/${result.campana.fechaInicio.year}',
           ),
-        );
-      }
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            result.campana.estado == CampanaEstado.activa
+                ? BitmapDescriptor.hueGreen
+                : BitmapDescriptor.hueRed,
+          ),
+        ),
+      );
     }
 
     _markers
@@ -213,4 +221,11 @@ class _MapScreenState extends State<MapScreen> {
                 ),
     );
   }
+}
+
+class _GeocodingResult {
+  final CampanaEntity campana;
+  final ({double lat, double lng})? location;
+
+  const _GeocodingResult({required this.campana, this.location});
 }
