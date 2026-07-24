@@ -12,6 +12,7 @@ import '../../features/campanas/presentation/screens/campana_progress_screen.dar
 import '../../features/campanas/presentation/screens/jefe_dashboard_screen.dart';
 import '../../features/campanas/presentation/screens/map_screen.dart';
 import '../../features/campanas/presentation/screens/new_campana_screen.dart';
+import '../../features/patients/presentation/bloc/historia_bloc.dart';
 import '../../features/patients/presentation/bloc/patient_bloc.dart';
 import '../../features/patients/presentation/screens/new_patient_screen.dart';
 import '../../features/patients/presentation/screens/patient_detail_screen.dart';
@@ -134,9 +135,12 @@ class AppRouter {
         builder: (context, state) {
           final patientId = state.pathParameters['id']!;
           final name = (state.extra as Map<String, dynamic>?)?['name'] as String?;
-          return PatientDetailScreen(
-            patientId: patientId,
-            patientName: name,
+          return BlocProvider<HistoriaBloc>(
+            create: (_) => di.sl<HistoriaBloc>(),
+            child: PatientDetailScreen(
+              patientId: patientId,
+              patientName: name,
+            ),
           );
         },
       ),

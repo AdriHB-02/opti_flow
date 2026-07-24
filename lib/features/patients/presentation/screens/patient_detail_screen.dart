@@ -33,12 +33,15 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
     final session = await SessionManager.load();
     final doctorId = session?['id'] as String? ?? '';
     if (!mounted) return;
-    context.read<HistoriaBloc>().add(
-          LoadHistorias(
-            pacienteId: widget.patientId,
-            doctorId: doctorId,
-          ),
-        );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<HistoriaBloc>().add(
+            LoadHistorias(
+              pacienteId: widget.patientId,
+              doctorId: doctorId,
+            ),
+          );
+    });
   }
 
   @override
