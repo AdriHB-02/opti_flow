@@ -15,18 +15,19 @@ import 'features/patients/data/datasources/local_patient_data_source.dart';
 import 'features/patients/data/datasources/local_historia_data_source.dart';
 import 'features/patients/data/datasources/local_dependencia_data_source.dart';
 import 'features/patients/data/datasources/remote_patient_data_source.dart';
+import 'features/patients/data/datasources/remote_historia_data_source.dart';
 import 'features/patients/data/repositories/historia_repository.dart';
 import 'features/patients/data/repositories/patient_repository.dart';
 import 'features/patients/data/repositories/dependencia_repository.dart';
 import 'features/patients/data/services/gps_service.dart';
 import 'features/patients/data/services/camera_service.dart';
-import 'features/patients/data/services/s3_upload_service.dart';
+import 'features/patients/data/services/image_upload_service.dart';
 import 'features/patients/domain/repositories/i_historia_repository.dart';
 import 'features/patients/domain/repositories/i_patient_repository.dart';
 import 'features/patients/domain/repositories/i_dependencia_repository.dart';
 import 'features/patients/domain/services/i_gps_service.dart';
 import 'features/patients/domain/services/i_camera_service.dart';
-import 'features/patients/domain/services/i_s3_upload_service.dart';
+import 'features/patients/domain/services/i_image_upload_service.dart';
 import 'features/patients/domain/usecases/get_dependencias_usecase.dart';
 import 'features/patients/domain/usecases/get_historias_by_campana_usecase.dart';
 import 'features/patients/domain/usecases/get_historias_by_paciente_usecase.dart';
@@ -85,8 +86,8 @@ Future<void> init() async {
   // ── Camera Service ──
   sl.registerLazySingleton<ICameraService>(() => CameraService());
 
-  // ── S3 Upload Service ──
-  sl.registerLazySingleton<IS3UploadService>(() => S3UploadService());
+  // ── Image Upload Service (Supabase Storage) ──
+  sl.registerLazySingleton<IImageUploadService>(() => ImageUploadService());
 
   // ── Geocoding Service ──
   sl.registerLazySingleton<IGeocodingService>(() => GeocodingService());
@@ -110,6 +111,9 @@ Future<void> init() async {
   sl.registerLazySingleton<RemotePatientDataSource>(
     () => RemotePatientDataSource(supabaseClient: sl()),
   );
+  sl.registerLazySingleton<RemoteHistoriaDataSource>(
+    () => RemoteHistoriaDataSource(supabaseClient: sl()),
+  );
   sl.registerLazySingleton<RemoteCampanaDataSource>(
     () => RemoteCampanaDataSource(supabaseClient: sl()),
   );
@@ -125,7 +129,10 @@ Future<void> init() async {
     ),
   );
   sl.registerLazySingleton<IHistoriaRepository>(
-    () => HistoriaRepository(localDataSource: sl()),
+    () => HistoriaRepository(
+      localDataSource: sl(),
+      remoteDataSource: sl(),
+    ),
   );
   sl.registerLazySingleton<ICampanaRepository>(
     () => CampanaRepository(

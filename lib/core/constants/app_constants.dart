@@ -27,12 +27,6 @@ class AppConstants {
   static final googleWebClientId = dotenv.get('GOOGLE_WEB_CLIENT_ID', fallback: '');
   static final googleIosClientId = dotenv.get('GOOGLE_IOS_CLIENT_ID', fallback: '');
 
-  // ── AWS S3 (placeholder) ──
-  static const String awsBucket = String.fromEnvironment(
-    'AWS_BUCKET',
-    defaultValue: 'optiflow-images',
-  );
-
   // ── Sync config ──
   static const int maxSyncRetries = 3;
 

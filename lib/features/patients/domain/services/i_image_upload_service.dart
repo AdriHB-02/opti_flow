@@ -1,5 +1,5 @@
 import 'dart:io';
 
-abstract class IS3UploadService {
+abstract class IImageUploadService {
   Future<String> uploadImage(File file, {String? path});
 }

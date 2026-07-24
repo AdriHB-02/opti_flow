@@ -156,7 +156,7 @@ class RemotePatientDataSource {
       'nombre_completo': patient.nombreCompleto,
       'dependencia_id': patient.dependenciaId,
       'doctor_id': patient.doctorId,
-      'es_reconsulta': patient.esReconsulta,
+      'es_reconsulta': patient.esReconsulta ? 1 : 0,
       'created_at': patient.createdAt.toIso8601String(),
       'updated_at': patient.updatedAt.toIso8601String(),
     };

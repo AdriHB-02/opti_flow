@@ -183,6 +183,14 @@ class RemoteAuthDataSource {
         .eq('id', doctorId);
   }
 
+  Future<List<Map<String, dynamic>>> getDependenciasByDoctor(String doctorId) async {
+    final response = await _client
+        .from(AppConstants.tableDependencias)
+        .select()
+        .eq('doctor_id', doctorId);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
   Future<List<Map<String, dynamic>>> getPacientesPorMes() async {
     final response = await _client
         .from(AppConstants.tablePacientes)

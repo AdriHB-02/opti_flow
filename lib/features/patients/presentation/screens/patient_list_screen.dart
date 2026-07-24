@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:get_it/get_it.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/session_manager.dart';
@@ -24,6 +23,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _showSearch = false;
   String? _doctorId;
+  bool _initialized = false;
 
   @override
   void initState() {
@@ -36,7 +36,18 @@ class _PatientListScreenState extends State<PatientListScreen> {
     if (!mounted) return;
     final doctorId = session?['id'] as String? ?? '';
     setState(() => _doctorId = doctorId);
-    _loadPatients();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadPatients();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized && _doctorId != null) {
+      _initialized = true;
+      _loadPatients();
+    }
   }
 
   void _loadPatients() {
@@ -72,9 +83,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => GetIt.instance<PatientBloc>(),
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: _showSearch
               ? TextField(
@@ -156,7 +165,6 @@ class _PatientListScreenState extends State<PatientListScreen> {
             return const SizedBox.shrink();
           },
         ),
-      ),
     );
   }
 }

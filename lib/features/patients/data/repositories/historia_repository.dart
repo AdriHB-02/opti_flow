@@ -1,17 +1,23 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/data_source_exception.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/historia_clinica_entity.dart';
 import '../../domain/repositories/i_historia_repository.dart';
 import '../datasources/local_historia_data_source.dart';
+import '../datasources/remote_historia_data_source.dart';
 import '../models/historia_clinica_dto.dart';
 
 class HistoriaRepository implements IHistoriaRepository {
   final LocalHistoriaDataSource _localDataSource;
+  final RemoteHistoriaDataSource? _remoteDataSource;
 
-  HistoriaRepository({required LocalHistoriaDataSource localDataSource})
-      : _localDataSource = localDataSource;
+  HistoriaRepository({
+    required LocalHistoriaDataSource localDataSource,
+    RemoteHistoriaDataSource? remoteDataSource,
+  })  : _localDataSource = localDataSource,
+        _remoteDataSource = remoteDataSource;
 
   @override
   Future<Either<Failure, HistoriaClinicaEntity>> saveHistoria(
@@ -20,6 +26,15 @@ class HistoriaRepository implements IHistoriaRepository {
     try {
       final dto = HistoriaClinicaDTO.fromEntity(historia);
       await _localDataSource.insertHistoria(dto);
+
+      if (_remoteDataSource != null) {
+        try {
+          await _remoteDataSource.upsert(dto);
+        } catch (e) {
+          debugPrint('[HistoriaRepository] Remote upsert failed, saved locally: $e');
+        }
+      }
+
       return Right(historia);
     } on DataSourceException {
       return Left(CacheFailure('Error al guardar historia clínica'));

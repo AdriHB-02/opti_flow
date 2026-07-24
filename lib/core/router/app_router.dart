@@ -12,6 +12,7 @@ import '../../features/campanas/presentation/screens/campana_progress_screen.dar
 import '../../features/campanas/presentation/screens/jefe_dashboard_screen.dart';
 import '../../features/campanas/presentation/screens/map_screen.dart';
 import '../../features/campanas/presentation/screens/new_campana_screen.dart';
+import '../../features/patients/presentation/bloc/patient_bloc.dart';
 import '../../features/patients/presentation/screens/new_patient_screen.dart';
 import '../../features/patients/presentation/screens/patient_detail_screen.dart';
 import '../../features/patients/presentation/screens/patient_list_screen.dart';
@@ -113,13 +114,19 @@ class AppRouter {
         name: 'patientList',
         builder: (context, state) {
           final depId = state.pathParameters['depId']!;
-          return PatientListScreen(dependenciaId: depId);
+          return BlocProvider<PatientBloc>(
+            create: (_) => di.sl<PatientBloc>(),
+            child: PatientListScreen(dependenciaId: depId),
+          );
         },
       ),
       GoRoute(
         path: newPatient,
         name: 'newPatient',
-        builder: (context, state) => const NewPatientScreen(),
+        builder: (context, state) => BlocProvider<PatientBloc>(
+          create: (_) => di.sl<PatientBloc>(),
+          child: const NewPatientScreen(),
+        ),
       ),
       GoRoute(
         path: '$patientDetail/:id',

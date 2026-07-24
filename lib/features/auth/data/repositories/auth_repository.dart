@@ -43,10 +43,71 @@ class AuthRepository implements IAuthRepository {
     }
   }
 
+  Future<void> _syncAllDoctorsToLocal() async {
+    try {
+      final maps = await _remoteDataSource.getAllDoctors();
+      final db = await _databaseHelper.database;
+      final now = DateTime.now().toIso8601String();
+      await db.transaction((txn) async {
+        final batch = txn.batch();
+        for (final doc in maps) {
+          batch.insert(
+            AppConstants.tableDoctores,
+            {
+              'id': doc['id'],
+              'nombre': doc['nombre'] ?? '',
+              'email': doc['email'] ?? '',
+              'rol': doc['rol'] ?? 'USER',
+              'dependencia_local_id': doc['dependencia_local_id'],
+              'activo': doc['activo'] ?? 1,
+              'created_at': doc['created_at'] ?? now,
+              'updated_at': doc['updated_at'] ?? now,
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        await batch.commit(noResult: true);
+      });
+      debugPrint('[AuthRepo] Synced ${maps.length} doctors to local DB');
+    } catch (e) {
+      debugPrint('[AuthRepo] _syncAllDoctorsToLocal error: $e');
+    }
+  }
+
+  Future<void> _syncDependenciasToLocal(String doctorId) async {
+    try {
+      final maps = await _remoteDataSource.getDependenciasByDoctor(doctorId);
+      if (maps.isEmpty) return;
+      final db = await _databaseHelper.database;
+      await db.transaction((txn) async {
+        final batch = txn.batch();
+        for (final dep in maps) {
+          batch.insert(
+            AppConstants.tableDependencias,
+            {
+              'id': dep['id'],
+              'tipo': dep['tipo'] ?? 'LOCAL',
+              'campana_id': dep['campana_id'],
+              'doctor_id': dep['doctor_id'],
+              'nombre': dep['nombre'] ?? '',
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        await batch.commit(noResult: true);
+      });
+      debugPrint('[AuthRepo] Synced ${maps.length} dependencias to local DB');
+    } catch (e) {
+      debugPrint('[AuthRepo] _syncDependenciasToLocal error: $e');
+    }
+  }
+
   @override
   Future<UserEntity> login(String email, String password) async {
     final data = await _remoteDataSource.login(email, password);
     await _upsertDoctorLocal(data);
+    await _syncAllDoctorsToLocal();
+    await _syncDependenciasToLocal(data['id'] as String);
     try {
       return UserFactory.fromMap(data);
     } catch (e) {
@@ -58,6 +119,8 @@ class AuthRepository implements IAuthRepository {
   Future<UserEntity> loginBiometrico() async {
     final data = await _remoteDataSource.loginBiometrico();
     await _upsertDoctorLocal(data);
+    await _syncAllDoctorsToLocal();
+    await _syncDependenciasToLocal(data['id'] as String);
     try {
       return UserFactory.fromMap(data);
     } catch (e) {
@@ -69,6 +132,8 @@ class AuthRepository implements IAuthRepository {
   Future<UserEntity> loginWithGoogle() async {
     final data = await _remoteDataSource.loginWithGoogle();
     await _upsertDoctorLocal(data);
+    await _syncAllDoctorsToLocal();
+    await _syncDependenciasToLocal(data['id'] as String);
     try {
       return UserFactory.fromMap(data);
     } catch (e) {

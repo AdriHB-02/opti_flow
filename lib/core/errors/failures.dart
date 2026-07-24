@@ -32,6 +32,6 @@ class CameraFailure extends Failure {
   const CameraFailure(super.message);
 }
 
-class S3Failure extends Failure {
-  const S3Failure(super.message);
+class StorageFailure extends Failure {
+  const StorageFailure(super.message);
 }

@@ -39,6 +39,7 @@ class OptiFlowApp extends StatelessWidget {
           }
         },
         child: MaterialApp.router(
+          debugShowCheckedModeBanner: false, 
           title: 'OptiFlow',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),

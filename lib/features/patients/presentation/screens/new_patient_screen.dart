@@ -11,7 +11,7 @@ import '../../../../core/utils/session_manager.dart';
 import '../../domain/entities/dependencia_entity.dart';
 import '../../domain/services/i_camera_service.dart';
 import '../../domain/services/i_gps_service.dart';
-import '../../domain/services/i_s3_upload_service.dart';
+import '../../domain/services/i_image_upload_service.dart';
 import '../../domain/usecases/get_dependencias_usecase.dart';
 import '../../domain/usecases/register_patient_usecase.dart';
 import '../bloc/patient_bloc.dart';
@@ -34,7 +34,7 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
       GetIt.instance<GetDependenciasUseCase>();
   final IGpsService _gpsService = GetIt.instance<IGpsService>();
   final ICameraService _cameraService = GetIt.instance<ICameraService>();
-  final IS3UploadService _s3UploadService = GetIt.instance<IS3UploadService>();
+  final IImageUploadService _imageUploadService = GetIt.instance<IImageUploadService>();
 
   List<DependenciaEntity> _dependencias = [];
   DependenciaEntity? _selectedDependencia;
@@ -209,7 +209,7 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
     if (_capturedPhoto != null && imageUrl == null) {
       setState(() => _photoLoading = true);
       try {
-        imageUrl = await _s3UploadService.uploadImage(
+        imageUrl = await _imageUploadService.uploadImage(
           _capturedPhoto!,
           path: 'diagnosticos/${_doctorId ?? "unknown"}/${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
@@ -217,7 +217,7 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
       } catch (e) {
         if (!mounted) return;
         setState(() => _photoLoading = false);
-        final message = e is S3Failure
+        final message = e is StorageFailure
             ? e.message
             : 'Error al subir la foto';
         ScaffoldMessenger.of(context).showSnackBar(
@@ -252,9 +252,7 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => GetIt.instance<PatientBloc>(),
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: const Text('Nuevo Paciente')),
         body: BlocConsumer<PatientBloc, PatientState>(
           listener: (context, state) {
@@ -356,8 +354,7 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
             );
           },
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildGpsConfirmationCard() {
