@@ -8,6 +8,45 @@ import '../bloc/historia_event.dart';
 import '../bloc/historia_state.dart';
 import '../widgets/shimmer_loading.dart';
 
+void _showImageFullScreen(BuildContext context, String imageUrl) {
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        body: Center(
+          child: InteractiveViewer(
+            child: Image.network(
+              imageUrl,
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const Center(child: CircularProgressIndicator());
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.broken_image, size: 64, color: Colors.white54),
+                      SizedBox(height: 8),
+                      Text('Error al cargar imagen',
+                          style: TextStyle(color: Colors.white54)),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 class PatientDetailScreen extends StatefulWidget {
   final String patientId;
   final String? patientName;
@@ -130,6 +169,53 @@ class _HistoriaCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
+            if (historia.imagenUrl != null && historia.imagenUrl!.isNotEmpty)
+              ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: InkWell(
+                    onTap: () => _showImageFullScreen(context, historia.imagenUrl!),
+                    child: Image.network(
+                      historia.imagenUrl!,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 200,
+                          color: Colors.grey.shade200,
+                          child: const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.broken_image,
+                                    size: 40, color: Colors.grey),
+                                SizedBox(height: 4),
+                                Text('Error al cargar imagen'),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
             if (historia.diagnosticoTexto != null &&
                 historia.diagnosticoTexto!.isNotEmpty) ...[
               Text(
