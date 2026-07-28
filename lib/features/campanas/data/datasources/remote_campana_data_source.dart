@@ -11,6 +11,25 @@ class RemoteCampanaDataSource {
       : _supabaseClient = supabaseClient;
 
   static const String _tableName = 'campanas';
+  static const String _empresasTable = 'empresas';
+
+  Future<void> upsertEmpresa(Map<String, dynamic> empresaMap) async {
+    try {
+      await _supabaseClient.from(_empresasTable).upsert(empresaMap);
+    } on PostgrestException catch (e) {
+      debugPrint('[RemoteCampanaDataSource] upsertEmpresa error: ${e.message}');
+      throw DataSourceException(
+        'Error al sincronizar empresa en remoto',
+        originalError: e,
+      );
+    } on Exception catch (e) {
+      debugPrint('[RemoteCampanaDataSource] upsertEmpresa unexpected error: $e');
+      throw DataSourceException(
+        'Error inesperado al sincronizar empresa',
+        originalError: e,
+      );
+    }
+  }
 
   Future<void> upsert(CampanaDTO campana) async {
     try {
