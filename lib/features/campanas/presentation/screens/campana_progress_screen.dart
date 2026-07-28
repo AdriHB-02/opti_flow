@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../patients/domain/entities/historia_clinica_entity.dart';
 import '../../../patients/domain/usecases/get_historias_by_campana_usecase.dart';
+import '../../data/services/pdf_report_service.dart';
 import '../../domain/entities/doctor_progress.dart';
 import '../bloc/campana_bloc.dart';
 import '../bloc/campana_event.dart';
@@ -55,6 +57,28 @@ class _CampanaProgressScreenState extends State<CampanaProgressScreen> {
         setState(() => _mapLoading = false);
       },
     );
+  }
+
+  Future<void> _generatePdf() async {
+    final supabase = GetIt.instance<SupabaseClient>();
+    final service = PdfReportService(supabase);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Generando PDF...'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+
+    try {
+      await service.generateAndShare(widget.campanaId);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al generar PDF: $e')),
+      );
+    }
   }
 
   void _buildMarkersFromHistorias(List<HistoriaClinicaEntity> historias) {
@@ -177,7 +201,7 @@ class _CampanaProgressScreenState extends State<CampanaProgressScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _generatePdf(),
                     icon: const Icon(Icons.picture_as_pdf),
                     label: const Text('GENERAR PDF'),
                     style: ElevatedButton.styleFrom(
