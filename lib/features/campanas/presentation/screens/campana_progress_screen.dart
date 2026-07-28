@@ -173,6 +173,18 @@ class _CampanaProgressScreenState extends State<CampanaProgressScreen> {
                 _buildProgressTable(progress),
                 const SizedBox(height: 24),
                 _buildMapSection(),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.picture_as_pdf),
+                    label: const Text('GENERAR PDF'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ),
               ],
             ),
           );
