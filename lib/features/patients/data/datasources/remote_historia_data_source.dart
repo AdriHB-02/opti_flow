@@ -42,6 +42,34 @@ class RemoteHistoriaDataSource {
     }
   }
 
+  Future<List<HistoriaClinicaDTO>> getByCampanaId(String campanaId) async {
+    try {
+      final response = await _supabaseClient
+        .from(_tableName)
+        .select()
+        .eq('campana_id', campanaId)
+        .order('fecha_atencion', ascending: false);
+
+      final List<HistoriaClinicaDTO> historias = [];
+      for (final row in response) {
+        historias.add(HistoriaClinicaDTO.fromMap(row));
+      }
+      return historias;
+    } on PostgrestException catch (e) {
+      debugPrint('[RemoteHistoriaDataSource] getByCampanaId error: \${e.message}');
+      throw DataSourceException(
+        'Error al obtener historias clínicas por campaña remoto',
+        originalError: e,
+      );
+    } on Exception catch (e) {
+      debugPrint('[RemoteHistoriaDataSource] getByCampanaId unexpected error: \$e');
+      throw DataSourceException(
+        'Error inesperado al obtener historias clínicas por campaña remoto',
+        originalError: e,
+      );
+    }
+  }
+
   Map<String, dynamic> _toSupabaseMap(HistoriaClinicaDTO historia) {
     return {
       'id': historia.id,

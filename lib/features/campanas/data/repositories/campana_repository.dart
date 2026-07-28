@@ -106,6 +106,24 @@ class CampanaRepository implements ICampanaRepository {
     String campanaId,
   ) async {
     try {
+      if (_remoteDataSource != null) {
+        try {
+          final remoteProgressMaps = await _remoteDataSource.getCampanaProgressByCampanaId(
+            campanaId,
+          );
+          final entities = remoteProgressMaps
+            .map((map) => DoctorProgress(
+              doctorId: map['doctor_id'] as String,
+              doctorNombre: map['doctor_nombre'] as String,
+              totalPacientes: (map['total_pacientes'] as num).toInt(),
+            ))
+            .toList();
+          return Right(entities);
+        } catch (e) {
+          debugPrint('[CampanaRepository] Remote fetch failed, using local: \$e');
+        }
+      }
+
       final dtos = await _localDataSource.getCampanaProgress(campanaId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);

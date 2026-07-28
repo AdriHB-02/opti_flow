@@ -113,15 +113,6 @@ class LocalCampanaDataSource {
   Future<void> assignDoctor(String campanaId, String doctorId) async {
     try {
       final db = await _databaseHelper.database;
-      final existing = await db.query(
-        AppConstants.tableDoctorCampana,
-        where: 'campana_id = ? AND doctor_id = ?',
-        whereArgs: [campanaId, doctorId],
-        limit: 1,
-      );
-      if (existing.isNotEmpty) {
-        throw DataSourceException('El doctor ya esta asignado a esta campana');
-      }
       await db.insert(
         AppConstants.tableDoctorCampana,
         {
@@ -133,6 +124,22 @@ class LocalCampanaDataSource {
       );
     } on DatabaseException catch (e) {
       throw DataSourceException('Error al asignar doctor a campana', originalError: e);
+    }
+  }
+
+  Future<bool> assignDoctorExists(String campanaId) async {
+    try {
+      final db = await _databaseHelper.database;
+      final existing = await db.query(
+        AppConstants.tableDoctorCampana,
+        where: 'campana_id = ?',
+        whereArgs: [campanaId],
+        limit: 1,
+      );
+      return existing.isNotEmpty;
+    } on DatabaseException catch (e) {
+      debugPrint('[DataSource] assignDoctorExists error: $e');
+      return false;
     }
   }
 

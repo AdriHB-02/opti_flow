@@ -74,6 +74,16 @@ class HistoriaRepository implements IHistoriaRepository {
     String campanaId,
   ) async {
     try {
+      if (_remoteDataSource != null) {
+        try {
+          final remoteDtos = await _remoteDataSource.getByCampanaId(campanaId);
+          final entities = remoteDtos.map((dto) => dto.toEntity()).toList();
+          return Right(entities);
+        } catch (e) {
+          debugPrint('[HistoriaRepository] Remote fetch failed, using local: $e');
+        }
+      }
+
       final dtos = await _localDataSource.getByCampana(campanaId);
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);

@@ -129,10 +129,10 @@ class RemoteCampanaDataSource {
   Future<CampanaDTO?> getById(String id) async {
     try {
       final response = await _supabaseClient
-          .from(_tableName)
-          .select()
-          .eq('id', id)
-          .maybeSingle();
+        .from(_tableName)
+        .select()
+        .eq('id', id)
+        .maybeSingle();
 
       if (response == null) return null;
       return CampanaDTO.fromMap(response);
@@ -146,6 +146,62 @@ class RemoteCampanaDataSource {
       debugPrint('[RemoteCampanaDataSource] getById unexpected error: $e');
       throw DataSourceException(
         'Error inesperado al obtener campaña por id remoto',
+        originalError: e,
+      );
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getCampanaProgressByCampanaId(
+    String campanaId,
+  ) async {
+    try {
+      // Get doctors and patient counts from historias_clinicas grouped by doctor
+      final historias = await _supabaseClient
+        .from('historias_clinicas')
+        .select('doctor_id, paciente_id')
+        .eq('campana_id', campanaId);
+
+      if (historias.isEmpty) return [];
+
+      // Get unique doctor IDs and count distinct patients per doctor
+      final doctorPatientCounts = <String, Set<String>>{};
+      for (final h in historias) {
+        final doctorId = h['doctor_id'] as String;
+        final pacienteId = h['paciente_id'] as String;
+        doctorPatientCounts.putIfAbsent(doctorId, () => <String>{});
+        doctorPatientCounts[doctorId]!.add(pacienteId);
+      }
+
+      // Get doctor names
+      final doctorIds = doctorPatientCounts.keys.toList();
+      final doctoresData = await _supabaseClient
+        .from('doctores')
+        .select('id, nombre')
+        .inFilter('id', doctorIds);
+
+      final doctorNames = <String, String>{};
+      for (final d in doctoresData) {
+        doctorNames[d['id'] as String] = d['nombre'] as String;
+      }
+
+      // Build result
+      return doctorPatientCounts.entries.map((e) {
+        return {
+          'doctor_id': e.key,
+          'doctor_nombre': doctorNames[e.key] ?? 'Desconocido',
+          'total_pacientes': e.value.length,
+        };
+      }).toList();
+    } on PostgrestException catch (e) {
+      debugPrint('[RemoteCampanaDataSource] getCampanaProgressByCampanaId error: \${e.message}');
+      throw DataSourceException(
+        'Error al obtener progreso de campaña remoto',
+        originalError: e,
+      );
+    } on Exception catch (e) {
+      debugPrint('[RemoteCampanaDataSource] getCampanaProgressByCampanaId unexpected error: \$e');
+      throw DataSourceException(
+        'Error inesperado al obtener progreso de campaña remoto',
         originalError: e,
       );
     }
