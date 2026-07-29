@@ -151,6 +151,15 @@ class CampanaRepository implements ICampanaRepository {
   Future<Either<Failure, void>> createEmpresa(Map<String, dynamic> empresaMap) async {
     try {
       await _localDataSource.insertEmpresa(empresaMap);
+
+      if (_remoteDataSource != null) {
+        try {
+          await _remoteDataSource.upsertEmpresa(empresaMap);
+        } catch (e) {
+          debugPrint('[CampanaRepository] Remote empresa upsert failed, saved locally: $e');
+        }
+      }
+
       return const Right(null);
     } on DataSourceException catch (e) {
       debugPrint('[Repo] createEmpresa error: $e — original: ${e.originalError}');

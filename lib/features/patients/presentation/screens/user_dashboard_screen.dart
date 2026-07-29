@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/session_manager.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../domain/entities/dependencia_entity.dart';
 import '../../domain/usecases/get_dependencias_usecase.dart';
 import '../widgets/shimmer_loading.dart';
@@ -71,7 +74,16 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('OptiFlow - User Dashboard')),
+      appBar: AppBar(
+        title: const Text('OptiFlow - User Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () =>
+                context.read<AuthBloc>().add(const LogoutRequested()),
+          ),
+        ],
+      ),
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRouter.newPatient),
