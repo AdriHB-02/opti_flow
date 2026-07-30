@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/errors/data_source_exception.dart';
 import '../models/campana_dto.dart';
@@ -12,6 +13,7 @@ class RemoteCampanaDataSource {
 
   static const String _tableName = 'campanas';
   static const String _empresasTable = 'empresas';
+  static const String _doctorCampanaTable = 'doctor_campana';
 
   Future<void> upsertEmpresa(Map<String, dynamic> empresaMap) async {
     try {
@@ -26,6 +28,35 @@ class RemoteCampanaDataSource {
       debugPrint('[RemoteCampanaDataSource] upsertEmpresa unexpected error: $e');
       throw DataSourceException(
         'Error inesperado al sincronizar empresa',
+        originalError: e,
+      );
+    }
+  }
+
+  Future<void> assignDoctor(String campanaId, String doctorId) async {
+    try {
+      final currentUser = _supabaseClient.auth.currentUser;
+      if (currentUser == null) {
+        throw DataSourceException('Usuario no autenticado');
+      }
+      await _supabaseClient.from(_doctorCampanaTable).upsert({
+        'id': const Uuid().v4(),
+        'doctor_id': doctorId,
+        'campana_id': campanaId,
+        'asignado_en': DateTime.now().toUtc().toIso8601String(),
+      });
+    } on PostgrestException catch (e) {
+      debugPrint('[RemoteCampanaDataSource] assignDoctor error: ${e.message}');
+      throw DataSourceException(
+        'Error al sincronizar asignacion de doctor en remoto',
+        originalError: e,
+      );
+    } on DataSourceException {
+      rethrow;
+    } on Exception catch (e) {
+      debugPrint('[RemoteCampanaDataSource] assignDoctor unexpected error: $e');
+      throw DataSourceException(
+        'Error inesperado al sincronizar asignacion de doctor',
         originalError: e,
       );
     }
