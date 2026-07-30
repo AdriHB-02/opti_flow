@@ -233,6 +233,7 @@ class _NewPatientScreenState extends State<NewPatientScreen> {
       nombreCompleto: _nameController.text.trim(),
       dependenciaId: _selectedDependencia!.id,
       doctorId: _doctorId ?? '',
+      campanaId: _selectedDependencia!.campanaId,
       diagnosticoTexto: _diagnosticoController.text.trim(),
       imagenUrl: imageUrl,
       latitud: _capturedLat,

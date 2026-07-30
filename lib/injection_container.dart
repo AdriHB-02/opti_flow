@@ -194,7 +194,10 @@ Future<void> init() async {
 
   // ── Campaña Use Cases ──
   sl.registerLazySingleton<CreateCampanaUseCase>(
-    () => CreateCampanaUseCase(sl()),
+    () => CreateCampanaUseCase(
+      sl(),
+      dependenciaRepository: sl(),
+    ),
   );
   sl.registerLazySingleton<AssignDoctorToCampanaUseCase>(
     () => AssignDoctorToCampanaUseCase(sl()),
