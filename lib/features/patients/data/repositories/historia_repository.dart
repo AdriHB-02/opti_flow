@@ -23,22 +23,30 @@ class HistoriaRepository implements IHistoriaRepository {
   Future<Either<Failure, HistoriaClinicaEntity>> saveHistoria(
     HistoriaClinicaEntity historia,
   ) async {
+    final dto = HistoriaClinicaDTO.fromEntity(historia);
+
+    bool localOk = true;
     try {
-      final dto = HistoriaClinicaDTO.fromEntity(historia);
       await _localDataSource.insertHistoria(dto);
-
-      if (_remoteDataSource != null) {
-        try {
-          await _remoteDataSource.upsert(dto);
-        } catch (e) {
-          debugPrint('[HistoriaRepository] Remote upsert failed, saved locally: $e');
-        }
-      }
-
-      return Right(historia);
-    } on DataSourceException {
-      return Left(CacheFailure('Error al guardar historia clínica'));
+    } on DataSourceException catch (e) {
+      debugPrint('[HistoriaRepository] Local insert failed, trying remote: $e');
+      localOk = false;
     }
+
+    bool remoteOk = false;
+    if (_remoteDataSource != null) {
+      try {
+        await _remoteDataSource.upsert(dto);
+        remoteOk = true;
+      } catch (e) {
+        debugPrint('[HistoriaRepository] Remote upsert failed: $e');
+      }
+    }
+
+    if (localOk || remoteOk) {
+      return Right(historia);
+    }
+    return Left(CacheFailure('Error al guardar historia clínica'));
   }
 
   @override
