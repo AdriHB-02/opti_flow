@@ -184,11 +184,33 @@ class RemoteAuthDataSource {
   }
 
   Future<List<Map<String, dynamic>>> getDependenciasByDoctor(String doctorId) async {
-    final response = await _client
+    final campanaRows = await _client
+        .from(AppConstants.tableDoctorCampana)
+        .select('campana_id')
+        .eq('doctor_id', doctorId);
+    final campanaIds =
+        campanaRows.map((r) => r['campana_id'] as String).toList();
+
+    final directas = await _client
         .from(AppConstants.tableDependencias)
         .select()
         .eq('doctor_id', doctorId);
-    return List<Map<String, dynamic>>.from(response);
+    final result = List<Map<String, dynamic>>.from(directas);
+
+    if (campanaIds.isNotEmpty) {
+      final porCampana = await _client
+          .from(AppConstants.tableDependencias)
+          .select()
+          .inFilter('campana_id', campanaIds);
+      final existentes = result.map((r) => r['id'] as String).toSet();
+      for (final row in porCampana) {
+        if (!existentes.contains(row['id'] as String)) {
+          result.add(row);
+        }
+      }
+    }
+
+    return result;
   }
 
   Future<List<Map<String, dynamic>>> getPacientesPorMes() async {

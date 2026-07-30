@@ -12,6 +12,50 @@ class RemoteDependenciaDataSource {
 
   static const String _tableName = 'dependencias';
 
+  Future<List<DependenciaDTO>> getDependenciasByDoctor(String doctorId) async {
+    try {
+      final campanaRows = await _supabaseClient
+          .from('doctor_campana')
+          .select('campana_id')
+          .eq('doctor_id', doctorId);
+      final campanaIds =
+          campanaRows.map((r) => r['campana_id'] as String).toList();
+
+      final directas = await _supabaseClient
+          .from(_tableName)
+          .select()
+          .eq('doctor_id', doctorId);
+      final result = List<Map<String, dynamic>>.from(directas);
+
+      if (campanaIds.isNotEmpty) {
+        final porCampana = await _supabaseClient
+            .from(_tableName)
+            .select()
+            .inFilter('campana_id', campanaIds);
+        final existentes = result.map((r) => r['id'] as String).toSet();
+        for (final row in porCampana) {
+          if (!existentes.contains(row['id'] as String)) {
+            result.add(row);
+          }
+        }
+      }
+
+      return result.map((map) => DependenciaDTO.fromMap(map)).toList();
+    } on PostgrestException catch (e) {
+      debugPrint('[RemoteDependenciaDataSource] getDependenciasByDoctor error: ${e.message}');
+      throw DataSourceException(
+        'Error al obtener dependencias remotas',
+        originalError: e,
+      );
+    } on Exception catch (e) {
+      debugPrint('[RemoteDependenciaDataSource] getDependenciasByDoctor unexpected error: $e');
+      throw DataSourceException(
+        'Error inesperado al obtener dependencias remotas',
+        originalError: e,
+      );
+    }
+  }
+
   Future<void> upsert(DependenciaDTO dependencia) async {
     try {
       final currentUser = _supabaseClient.auth.currentUser;

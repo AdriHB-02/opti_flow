@@ -24,12 +24,52 @@ class DependenciaRepository implements IDependenciaRepository {
     String doctorId,
   ) async {
     try {
-      final dtos = await _localDataSource.getDependenciasByDoctor(doctorId);
-      final entities = dtos.map((dto) => dto.toEntity()).toList();
+      final localDtos = await _localDataSource.getDependenciasByDoctor(doctorId);
+
+      if (_remoteDataSource != null) {
+        try {
+          final remoteDtos =
+              await _remoteDataSource.getDependenciasByDoctor(doctorId);
+          final merged = _mergeDependenciaLists(localDtos, remoteDtos);
+          final entities = merged.map((dto) => dto.toEntity()).toList();
+          return Right(entities);
+        } catch (e) {
+          debugPrint(
+            '[DependenciaRepository] Remote fetch failed, using local: $e',
+          );
+        }
+      }
+
+      final entities = localDtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
     } on DataSourceException {
       return Left(CacheFailure('Error al obtener dependencias'));
     }
+  }
+
+  List<DependenciaDTO> _mergeDependenciaLists(
+    List<DependenciaDTO> local,
+    List<DependenciaDTO> remote,
+  ) {
+    final mergedMap = <String, DependenciaDTO>{};
+
+    for (final dto in remote) {
+      mergedMap[dto.id] = dto;
+    }
+
+    for (final dto in local) {
+      if (!mergedMap.containsKey(dto.id)) {
+        mergedMap[dto.id] = dto;
+      }
+    }
+
+    final merged = mergedMap.values.toList();
+    merged.sort((a, b) {
+      final tipoComp = a.tipo.name.compareTo(b.tipo.name);
+      if (tipoComp != 0) return tipoComp;
+      return a.nombre.compareTo(b.nombre);
+    });
+    return merged;
   }
 
   @override
