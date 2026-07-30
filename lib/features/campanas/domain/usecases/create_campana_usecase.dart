@@ -1,9 +1,12 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/usecases/usecase.dart';
+import '../../../../features/patients/domain/entities/dependencia_entity.dart';
+import '../../../../features/patients/domain/repositories/i_dependencia_repository.dart';
 import '../entities/campana_entity.dart';
 import '../repositories/i_campana_repository.dart';
 
@@ -70,8 +73,12 @@ class CreateCampanaResult extends Equatable {
 class CreateCampanaUseCase
     implements UseCase<CreateCampanaResult, CreateCampanaParams> {
   final ICampanaRepository repository;
+  final IDependenciaRepository _dependenciaRepository;
 
-  CreateCampanaUseCase(this.repository);
+  CreateCampanaUseCase(
+    this.repository, {
+    required IDependenciaRepository dependenciaRepository,
+  }) : _dependenciaRepository = dependenciaRepository;
 
   @override
   Future<Either<Failure, CreateCampanaResult>> call(
@@ -120,11 +127,27 @@ class CreateCampanaUseCase
     }
 
     final campanaEntity = params.toEntity(id, empresaId);
-    return repository.createCampana(campanaEntity).then(
-      (result) => result.fold(
-        (failure) => Left(failure),
-        (campana) => Right(CreateCampanaResult(campanaCreada: campana)),
-      ),
+    final result = await repository.createCampana(campanaEntity);
+
+    return result.fold(
+      (failure) => Left(failure),
+      (campana) async {
+        final dependencia = DependenciaEntity(
+          id: const Uuid().v4(),
+          tipo: DependenciaTipo.empresa,
+          campanaId: campana.id,
+          doctorId: params.creadoPor,
+          nombre: '${params.nombreEmpresa} - ${params.lugar}',
+        );
+        final depResult =
+            await _dependenciaRepository.createDependenciaLocal(dependencia);
+        depResult.fold(
+          (failure) =>
+              debugPrint('[CreateCampanaUseCase] Failed to create dependencia: $failure'),
+          (_) {},
+        );
+        return Right(CreateCampanaResult(campanaCreada: campana));
+      },
     );
   }
 }

@@ -23,29 +23,59 @@ class HistoriaRepository implements IHistoriaRepository {
   Future<Either<Failure, HistoriaClinicaEntity>> saveHistoria(
     HistoriaClinicaEntity historia,
   ) async {
+    final dto = HistoriaClinicaDTO.fromEntity(historia);
+
     try {
-      final dto = HistoriaClinicaDTO.fromEntity(historia);
       await _localDataSource.insertHistoria(dto);
-
-      if (_remoteDataSource != null) {
-        try {
-          await _remoteDataSource.upsert(dto);
-        } catch (e) {
-          debugPrint('[HistoriaRepository] Remote upsert failed, saved locally: $e');
-        }
-      }
-
-      return Right(historia);
-    } on DataSourceException {
+    } on DataSourceException catch (e) {
+      debugPrint('[HistoriaRepository] Local insert failed: $e');
       return Left(CacheFailure('Error al guardar historia clínica'));
     }
+
+    if (_remoteDataSource != null) {
+      try {
+        await _remoteDataSource.upsert(dto);
+      } catch (e) {
+        debugPrint('[HistoriaRepository] Remote upsert failed: $e');
+      }
+    }
+
+    return Right(historia);
   }
 
   @override
   Future<Either<Failure, List<HistoriaClinicaEntity>>>
       getHistoriasByPaciente(String pacienteId, String doctorId) async {
     try {
-      final dtos = await _localDataSource.getByPaciente(pacienteId, doctorId);
+      debugPrint('[HistoriaRepository] getHistoriasByPaciente pacienteId=$pacienteId');
+
+      if (_remoteDataSource != null) {
+        try {
+          debugPrint('[HistoriaRepository] Fetching from Supabase...');
+          final remoteDtos =
+              await _remoteDataSource.getByPacienteId(pacienteId);
+          debugPrint('[HistoriaRepository] Supabase returned ${remoteDtos.length} historias');
+
+          for (final dto in remoteDtos) {
+            try {
+              await _localDataSource.insertHistoriaSilent(dto);
+            } catch (cacheError) {
+              debugPrint('[HistoriaRepository] Error cacheando historia local ${dto.id}: $cacheError');
+            }
+          }
+
+          final entities = remoteDtos.map((dto) => dto.toEntity()).toList();
+          return Right(entities);
+        } catch (e) {
+          debugPrint(
+            '[HistoriaRepository] Remote fetch by paciente failed: $e',
+          );
+        }
+      }
+
+      debugPrint('[HistoriaRepository] Falling back to SQLite local...');
+      final dtos = await _localDataSource.getByPaciente(pacienteId);
+      debugPrint('[HistoriaRepository] SQLite returned ${dtos.length} historias');
       final entities = dtos.map((dto) => dto.toEntity()).toList();
       return Right(entities);
     } on DataSourceException {

@@ -92,13 +92,28 @@ class CampanaRepository implements ICampanaRepository {
     String campanaId,
     String doctorId,
   ) async {
+    bool localOk = true;
     try {
       await _localDataSource.assignDoctor(campanaId, doctorId);
-      return const Right(null);
     } on DataSourceException catch (e) {
-      debugPrint('[Repo] assignDoctor error: $e — original: ${e.originalError}');
-      return Left(CacheFailure('Error al asignar doctor a campaña'));
+      debugPrint('[CampanaRepository] Local assignDoctor failed, trying remote: $e');
+      localOk = false;
     }
+
+    bool remoteOk = false;
+    if (_remoteDataSource != null) {
+      try {
+        await _remoteDataSource.assignDoctor(campanaId, doctorId);
+        remoteOk = true;
+      } catch (e) {
+        debugPrint('[CampanaRepository] Remote assignDoctor failed: $e');
+      }
+    }
+
+    if (localOk || remoteOk) {
+      return const Right(null);
+    }
+    return Left(CacheFailure('Error al asignar doctor a campaña'));
   }
 
   @override

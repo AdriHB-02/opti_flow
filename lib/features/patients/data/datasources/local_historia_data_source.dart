@@ -64,16 +64,31 @@ class LocalHistoriaDataSource {
     }
   }
 
+  Future<void> insertHistoriaSilent(HistoriaClinicaDTO historia) async {
+    try {
+      final db = await _databaseHelper.database;
+      await db.insert(
+        AppConstants.tableHistoriasClinicas,
+        historia.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } on DatabaseException catch (e) {
+      throw DataSourceException(
+        'Error al insertar historia clinica',
+        originalError: e,
+      );
+    }
+  }
+
   Future<List<HistoriaClinicaDTO>> getByPaciente(
     String pacienteId,
-    String doctorId,
   ) async {
     try {
       final db = await _databaseHelper.database;
       final maps = await db.query(
         AppConstants.tableHistoriasClinicas,
-        where: 'paciente_id = ? AND doctor_id = ?',
-        whereArgs: [pacienteId, doctorId],
+        where: 'paciente_id = ?',
+        whereArgs: [pacienteId],
         orderBy: 'fecha_atencion DESC',
       );
       return maps.map((map) => HistoriaClinicaDTO.fromMap(map)).toList();

@@ -91,13 +91,21 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
       ),
       body: BlocBuilder<HistoriaBloc, HistoriaState>(
         builder: (context, state) {
+          debugPrint('[PatientDetail] state=$state widget.patientId=${widget.patientId}');
+
           if (state is HistoriaLoading) {
+            debugPrint('[PatientDetail] Estado: Loading');
             return const ShimmerLoading();
           }
 
           if (state is HistoriasLoaded) {
             final historias = state.historias;
+            debugPrint('[PatientDetail] HistoriasLoaded count=${historias.length}');
+            for (final h in historias) {
+              debugPrint('[PatientDetail]   historia id=${h.id} pacienteId=${h.pacienteId} fecha=${h.fechaAtencion}');
+            }
             if (historias.isEmpty) {
+              debugPrint('[PatientDetail] Lista vacia — mostrando mensaje');
               return const Center(
                 child: Text('No hay historias clínicas registradas'),
               );
@@ -115,6 +123,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
           }
 
           if (state is HistoriaError) {
+            debugPrint('[PatientDetail] Error: ${state.message}');
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -131,6 +140,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             );
           }
 
+          debugPrint('[PatientDetail] Estado no manejado: $state');
           return const SizedBox.shrink();
         },
       ),

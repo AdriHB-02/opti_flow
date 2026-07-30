@@ -14,6 +14,7 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/patients/data/datasources/local_patient_data_source.dart';
 import 'features/patients/data/datasources/local_historia_data_source.dart';
 import 'features/patients/data/datasources/local_dependencia_data_source.dart';
+import 'features/patients/data/datasources/remote_dependencia_data_source.dart';
 import 'features/patients/data/datasources/remote_patient_data_source.dart';
 import 'features/patients/data/datasources/remote_historia_data_source.dart';
 import 'features/patients/data/repositories/historia_repository.dart';
@@ -108,6 +109,9 @@ Future<void> init() async {
   sl.registerLazySingleton<LocalDependenciaDataSource>(
     () => LocalDependenciaDataSource(databaseHelper: sl()),
   );
+  sl.registerLazySingleton<RemoteDependenciaDataSource>(
+    () => RemoteDependenciaDataSource(supabaseClient: sl()),
+  );
   sl.registerLazySingleton<RemotePatientDataSource>(
     () => RemotePatientDataSource(supabaseClient: sl()),
   );
@@ -141,7 +145,10 @@ Future<void> init() async {
     ),
   );
   sl.registerLazySingleton<IDependenciaRepository>(
-    () => DependenciaRepository(localDataSource: sl()),
+    () => DependenciaRepository(
+      localDataSource: sl(),
+      remoteDataSource: sl(),
+    ),
   );
   sl.registerLazySingleton<ISyncRepository>(
     () => SyncRepository(databaseHelper: sl()),
@@ -194,7 +201,10 @@ Future<void> init() async {
 
   // ── Campaña Use Cases ──
   sl.registerLazySingleton<CreateCampanaUseCase>(
-    () => CreateCampanaUseCase(sl()),
+    () => CreateCampanaUseCase(
+      sl(),
+      dependenciaRepository: sl(),
+    ),
   );
   sl.registerLazySingleton<AssignDoctorToCampanaUseCase>(
     () => AssignDoctorToCampanaUseCase(sl()),
