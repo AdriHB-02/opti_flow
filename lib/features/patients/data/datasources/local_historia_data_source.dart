@@ -33,7 +33,10 @@ class LocalHistoriaDataSource {
         'intentos': 0,
       });
     } on DatabaseException catch (e) {
-      throw DataSourceException('Error al insertar historia clinica', originalError: e);
+      throw DataSourceException(
+        'Error al insertar historia clinica (paciente=${historia.pacienteId}, doctor=${historia.doctorId}, campana=${historia.campanaId})',
+        originalError: e,
+      );
     }
   }
 

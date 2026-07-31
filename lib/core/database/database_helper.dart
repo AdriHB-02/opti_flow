@@ -134,9 +134,7 @@ class DatabaseHelper {
         sincronizado INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL,
         FOREIGN KEY (paciente_id) REFERENCES ${AppConstants.tablePacientes}(id),
-        FOREIGN KEY (campana_id) REFERENCES ${AppConstants.tableCampanas}(id),
-        FOREIGN KEY (doctor_id) REFERENCES ${AppConstants.tableDoctores}(id),
-        FOREIGN KEY (historia_anterior_id) REFERENCES ${AppConstants.tableHistoriasClinicas}(id)
+        FOREIGN KEY (doctor_id) REFERENCES ${AppConstants.tableDoctores}(id)
       )
     ''');
 
@@ -221,6 +219,9 @@ class DatabaseHelper {
       if (oldVersion < 4) {
         await _migrateV3toV4(db);
       }
+      if (oldVersion < 5) {
+        await _migrateV4toV5(db);
+      }
     } catch (e) {
       debugPrint('[DB] Migración v$oldVersion→v$newVersion falló: $e');
       rethrow;
@@ -296,6 +297,51 @@ class DatabaseHelper {
     await db.execute('''
       ALTER TABLE ${AppConstants.tableSyncLog}
       ADD COLUMN intentos INTEGER NOT NULL DEFAULT 0
+    ''');
+  }
+
+  Future<void> _migrateV4toV5(Database db) async {
+    await db.execute('''
+      ALTER TABLE ${AppConstants.tableHistoriasClinicas}
+      RENAME TO historias_clinicas_v4_old
+    ''');
+    await db.execute('''
+      CREATE TABLE ${AppConstants.tableHistoriasClinicas} (
+        id TEXT PRIMARY KEY NOT NULL,
+        paciente_id TEXT NOT NULL,
+        campana_id TEXT,
+        diagnostico_texto TEXT,
+        imagen_url TEXT,
+        latitud REAL NOT NULL,
+        longitud REAL NOT NULL,
+        fecha_atencion TEXT NOT NULL,
+        doctor_id TEXT NOT NULL,
+        historia_anterior_id TEXT,
+        sincronizado INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (paciente_id) REFERENCES ${AppConstants.tablePacientes}(id),
+        FOREIGN KEY (doctor_id) REFERENCES ${AppConstants.tableDoctores}(id)
+      )
+    ''');
+    await db.execute('''
+      INSERT INTO ${AppConstants.tableHistoriasClinicas} (
+        id, paciente_id, campana_id, diagnostico_texto, imagen_url,
+        latitud, longitud, fecha_atencion, doctor_id, historia_anterior_id,
+        sincronizado, created_at
+      )
+      SELECT id, paciente_id, campana_id, diagnostico_texto, imagen_url,
+        latitud, longitud, fecha_atencion, doctor_id, historia_anterior_id,
+        sincronizado, created_at
+      FROM historias_clinicas_v4_old
+    ''');
+    await db.execute('DROP TABLE historias_clinicas_v4_old');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_historias_clinicas_paciente_id
+      ON ${AppConstants.tableHistoriasClinicas} (paciente_id)
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_historias_clinicas_campana_id
+      ON ${AppConstants.tableHistoriasClinicas} (campana_id)
     ''');
   }
 

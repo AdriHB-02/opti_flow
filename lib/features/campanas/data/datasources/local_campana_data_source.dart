@@ -110,6 +110,20 @@ class LocalCampanaDataSource {
     }
   }
 
+  Future<void> insertCampanaSilent(CampanaDTO campana) async {
+    try {
+      final db = await _databaseHelper.database;
+      await db.insert(
+        AppConstants.tableCampanas,
+        campana.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } on DatabaseException catch (e) {
+      debugPrint('[DataSource] insertCampanaSilent error: $e');
+      throw DataSourceException('Error al cachear campana', originalError: e);
+    }
+  }
+
   Future<void> assignDoctor(String campanaId, String doctorId) async {
     try {
       final db = await _databaseHelper.database;
