@@ -54,6 +54,13 @@ class CampanaRepository implements ICampanaRepository {
       if (_remoteDataSource != null) {
         try {
           final remoteDtos = await _remoteDataSource.getByDoctorId(doctorId);
+          for (final dto in remoteDtos) {
+            try {
+              await _localDataSource.insertCampanaSilent(dto);
+            } catch (cacheError) {
+              debugPrint('[CampanaRepository] Error cacheando campaña local ${dto.id}: $cacheError');
+            }
+          }
           final merged = _mergeCampanaLists(localDtos, remoteDtos);
           final entities = merged.map((dto) => dto.toEntity()).toList();
           return Right(entities);

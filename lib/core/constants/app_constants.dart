@@ -17,7 +17,7 @@ class AppConstants {
 
   // ── SQLite database ──
   static const String dbName = 'optiflow_local.db';
-  static const int dbVersion = 4;
+  static const int dbVersion = 5;
 
   static final loginLogoUrl = dotenv.get('LOGIN_LOGO_URL', fallback: 'https://your-project.supabase.co/storage/v1/object/public/logos/your-logo.png');
   static final supabaseUrl = dotenv.get('SUPABASE_URL', fallback: 'https://your-project.supabase.co/rest/v1');

@@ -5,5 +5,5 @@ class DataSourceException implements Exception {
   const DataSourceException(this.message, {this.originalError});
 
   @override
-  String toString() => message;
+  String toString() => originalError != null ? '$message: $originalError' : message;
 }
